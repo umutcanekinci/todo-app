@@ -36,9 +36,20 @@ class GUI(Tk):
 
         self.overrideredirect(True)
 
+    def Unminimize(self,e):
+        
+        self.update_idletasks()
+        self.overrideredirect(True)
+        self.state('normal')
+
     def Minimize(self):
-        return
-        self.iconify()
+
+        self.update_idletasks() # Reference: https://stackoverflow.com/questions/29186327/tclerror-cant-iconify-override-redirect-flag-is-set
+        self.overrideredirect(False)
+        #self.state('withdrawn')
+        self.state('iconic')
+
+        #self.iconify() # Giving error
 
     def GetPosition(self, event):
 
@@ -72,7 +83,7 @@ class GUI(Tk):
             relief = "ridge"
         )
         mainCanvas.place(x = 0, y = 0)
-
+        mainCanvas.bind("<Map>", self.Unminimize)
         # TopBar
         """ // Can't use that because I need an object to assign hold and drag function to move window.
         mainCanvas.create_rectangle(
@@ -107,13 +118,15 @@ class GUI(Tk):
             font=("Inter", 23 * -1),
             
         )
-
-        minimizeButton = CustomButton(self.topBar, self.Minimize, TOPBAR_COLOR, None)
+        
+        minimizeButton = CustomButton(self.topBar, self.Minimize, TEXT_COLOR, None)
         minimizeButton.place(MINIMIZE_BUTTON_RECT)
 
         exitImage = GetImage('exit_button.png', EXIT_BUTTON_RECT)
         exitButton = CustomButton(self.topBar, lambda: self.destroy(), TOPBAR_COLOR, image=exitImage)
         exitButton.place(EXIT_BUTTON_RECT)
+
+
 
     def Run(self):
 

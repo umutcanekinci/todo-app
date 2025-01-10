@@ -3,7 +3,7 @@ from tkinter import *
 class CustomButton(Button):
 
     def __init__(self, master: Misc | None, onClick, color: str, image: PhotoImage):
-        print(type(onClick))
+        
         super().__init__(master,
             image=image,
             borderwidth=0,
