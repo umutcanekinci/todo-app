@@ -10,8 +10,7 @@ class CustomButton(Button):
             highlightthickness=0,
             command=onClick,
             bg=color,
-            highlightbackground=color,
-            highlightcolor=color,
+            activebackground=color,
             relief="flat"
         )
 

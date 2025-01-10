@@ -6,9 +6,7 @@ def main():
     
     app = GUI()
     app.Initialize()
-
-
-
+    app.CreateWidgets()
     app.Run()
 
 if __name__ == "__main__":

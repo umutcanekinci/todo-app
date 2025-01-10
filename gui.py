@@ -73,6 +73,12 @@ class GUI(Tk):
         self.SetUnresizable()
         self.RemoveTitleBar()
 
+    def OpenInfo(self):
+
+        return
+
+    def CreateWidgets(self):
+
         mainCanvas = Canvas(
             self,
             bg = BACKGROUND_COLOR,
@@ -84,6 +90,7 @@ class GUI(Tk):
         )
         mainCanvas.place(x = 0, y = 0)
         mainCanvas.bind("<Map>", self.Unminimize)
+        
         # TopBar
         """ // Can't use that because I need an object to assign hold and drag function to move window.
         mainCanvas.create_rectangle(
@@ -106,9 +113,11 @@ class GUI(Tk):
         self.topBar.place(x=0, y=0)
         self.topBar.bind('<Button-1>', self.GetPosition) # Move window with topbar. Reference: https://stackoverflow.com/questions/23836000/can-i-change-the-title-bar-in-tkinter
 
+        # Logo
         logoImage = GetImage('logo.png', LOGO_RECT)
         self.topBar.create_image(LOGO_RECT[0], LOGO_RECT[1], image=logoImage)
 
+        # Title
         self.topBar.create_text(
             50,
             8,
@@ -119,14 +128,16 @@ class GUI(Tk):
             
         )
         
+        infoImage = GetImage('info.png', INFO_BUTTON_RECT)
+        infoButton = CustomButton(self.topBar, self.OpenInfo, TOPBAR_COLOR, infoImage)
+        infoButton.place(INFO_BUTTON_RECT)
+
         minimizeButton = CustomButton(self.topBar, self.Minimize, TEXT_COLOR, None)
         minimizeButton.place(MINIMIZE_BUTTON_RECT)
 
         exitImage = GetImage('exit_button.png', EXIT_BUTTON_RECT)
         exitButton = CustomButton(self.topBar, lambda: self.destroy(), TOPBAR_COLOR, image=exitImage)
         exitButton.place(EXIT_BUTTON_RECT)
-
-
 
     def Run(self):
 

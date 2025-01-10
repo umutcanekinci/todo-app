@@ -1,3 +1,8 @@
+BUGS
+- Minimize button is too small
+- Exit button needs to be fixed for apperance (FIXED)
+- Logo and Info button should be white
+
 Proje Adı:
 ToDoApp
 
