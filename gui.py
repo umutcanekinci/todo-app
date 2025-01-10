@@ -1,6 +1,13 @@
 from settings import *
 from tkinter import *
 from tkinter import ttk
+from PIL import Image, ImageTk
+from button import CustomButton
+
+def GetImage(file: str, rect: tuple[int, int, int, int]):
+
+    # PhotoImage(file="'./assets/'+file") # Does not working for pngs somehow
+    return ImageTk.PhotoImage(Image.open('./assets/'+file).resize((rect[2], rect[3])))
 
 class GUI(Tk):
     
@@ -29,6 +36,10 @@ class GUI(Tk):
 
         self.overrideredirect(True)
 
+    def Minimize(self):
+        return
+        self.iconify()
+
     def GetPosition(self, event):
 
         topleftX = self.winfo_x()
@@ -45,7 +56,6 @@ class GUI(Tk):
 
         self.topBar.bind('<B1-Motion>', Move)
 
-
     def Initialize(self):
 
         self.SetSize(*WINDOW_SIZE)
@@ -61,7 +71,6 @@ class GUI(Tk):
             highlightthickness = 0,
             relief = "ridge"
         )
-
         mainCanvas.place(x = 0, y = 0)
 
         # TopBar
@@ -74,17 +83,38 @@ class GUI(Tk):
             fill=TOPBAR_COLOR,
             outline="")
         """
-        self.topBar = Frame(mainCanvas, bg=TOPBAR_COLOR, relief='raised', bd=2)
-        self.topBar.place(x=0, y=0, width=WINDOW_WIDTH, height=40)
+        self.topBar = Canvas(
+            mainCanvas,
+            bg = TOPBAR_COLOR,
+            width = WINDOW_WIDTH,
+            height = 40,
+            bd = 0,
+            highlightthickness = 0,
+            relief = "ridge"
+        )
+        self.topBar.place(x=0, y=0)
         self.topBar.bind('<Button-1>', self.GetPosition) # Move window with topbar. Reference: https://stackoverflow.com/questions/23836000/can-i-change-the-title-bar-in-tkinter
 
-        
+        logoImage = GetImage('logo.png', LOGO_RECT)
+        self.topBar.create_image(LOGO_RECT[0], LOGO_RECT[1], image=logoImage)
 
+        self.topBar.create_text(
+            50,
+            8,
+            anchor="nw",
+            text=TITLE,
+            fill=TEXT_COLOR,
+            font=("Inter", 23 * -1),
+            
+        )
 
+        minimizeButton = CustomButton(self.topBar, self.Minimize, TOPBAR_COLOR, None)
+        minimizeButton.place(MINIMIZE_BUTTON_RECT)
+
+        exitImage = GetImage('exit_button.png', EXIT_BUTTON_RECT)
+        exitButton = CustomButton(self.topBar, lambda: self.destroy(), TOPBAR_COLOR, image=exitImage)
+        exitButton.place(EXIT_BUTTON_RECT)
 
     def Run(self):
 
         self.mainloop()
-
-    
-
