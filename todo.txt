@@ -1,0 +1,47 @@
+Proje Adı:
+ToDoApp
+
+Personal Code:
+***REMOVED***
+
+Features:
+
+İş Listesi Yönetimi:
+Kullanıcı, yapılacak işleri bir listeye ekleyebilir.
+Eklenen işlere "Başlık" ve "Açıklama" eklenebilir.
+Liste ekranında işlerin durumu (open/inprogress/done) gösterilir.
+Durum Yönetimi:
+
+İşler üç statüye sahip olabilir:
+Open: Yeni eklenen işler bu statüde başlar.
+In Progress: İşler üzerinde çalışılmaya başlandığında bu duruma alınır.
+Done: Tamamlanan işler bu duruma alınır.
+Open'dan doğrudan Done durumuna geçilebilir ama In Progress durumuna geçilemez.
+Detay Görüntüleme ve Düzenleme:
+
+İşlerin detaylarını görmek için seçilebilir.
+Detay ekranında başlık veya açıklama güncellenebilir.
+Arama ve Filtreleme:
+
+İşler başlığa göre aranabilir.
+Statüye göre filtrelenebilir. (Sadece "Done" işleri göster, vb.)
+Kayıt ve Geri Yükleme:
+
+Liste, JSON formatında bir dosyaya kaydedilir.
+Uygulama yeniden açıldığında, önceki işler geri yüklenir.
+Tema Değiştirme:
+
+Kullanıcı "Açık" ve "Koyu" tema arasında geçiş yapabilir.
+Zaman Takibi (Ekstra Özellik):
+
+İşler eklenirken son teslim tarihi belirlenebilir.
+Zamanı geçen işler kırmızıyla işaretlenir.
+Proje Yapısı (Structure):
+
+1. Ana Dosya:
+main.py
+Tkinter ile ana kullanıcı arayüzünü oluşturur.
+2. Modüller:
+models.py: İşlerin veri modelini içerir.
+storage.py: JSON dosyasına veri kaydetme ve geri yükleme işlemleri.
+utils.py: Yardımcı fonksiyonlar (ör. tarih karşılaştırma).
