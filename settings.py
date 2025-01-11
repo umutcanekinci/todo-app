@@ -8,16 +8,16 @@ TITLE_FONT = ("Inter", 25 * -1)
 # Using that color palette for this application in order to get a harmonical and beatiful color theme:
 # https://colorhunt.co/palette/222831393e4600adb5eeeeee
 
-BLACK = "#222831"
-GRAY = "#393E46"
-BLUE = "#00ADB5"
-WHITE = "#EEEEEE"
-RED = "#CDC1FF"
+BLACK = "#441752"
+GRAY = "#8174A0"
+BLUE = "#A888B5"
+WHITE = "#EFB6C8"
+RED = "#578E7E"
 YELLOW = "#FFC145"
 GREEN = "#5CB338"
 
 BORDER_COLOR = BLUE
-TEXT_COLOR = WHITE
+TEXT_COLOR = BLACK  
 TOP_COLOR = BLUE
 MAIN_COLOR = BLACK
 
@@ -59,7 +59,7 @@ LOGO_RECT =   Rect(PADDING * 3, 21, LOGO_SIZE, LOGO_SIZE)
 EXIT_BUTTON_RECT =     Rect(WINDOW_RECT.width         - ICON_SIZE - PADDING,  PADDING,     ICON_SIZE, ICON_SIZE)
 MINIMIZE_BUTTON_RECT = Rect(EXIT_BUTTON_RECT.left     - ICON_SIZE - PADDING,  PADDING * 2, ICON_SIZE, ICON_SIZE // 5)
 INFO_BUTTON_RECT =     Rect(MINIMIZE_BUTTON_RECT.left - ICON_SIZE - PADDING,  PADDING,     ICON_SIZE, ICON_SIZE)
-
+ADD_BUTTON_RECT = Rect(0, 0, ICON_SIZE, ICON_SIZE)
 
 OPEN_RECT =        Rect(PADDING,                          PADDING, PANEL_WIDTH, WINDOW_RECT.height - PADDING * 2)   
 IN_PROGRESS_RECT = Rect(OPEN_RECT.right + PADDING,        PADDING, PANEL_WIDTH, WINDOW_RECT.height - PADDING * 2)
@@ -88,5 +88,5 @@ DONE_TITLE_RECT =        Rect(DONE_RECT.centerX - 25,        DONE_RECT.y + PADDI
 LOGO_IMAGE = "logo.png"
 INFO_IMAGE = "info.png"
 EXIT_IMAGE = "exit_button.png"
-
+ADD_IMAGE = "add_button.png"
 #endregion

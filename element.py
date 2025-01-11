@@ -1,7 +1,7 @@
 from rect import Rect
 from settings import PADDING, BORDER_COLOR
-
-class Direction:
+from enum import Enum
+class Direction(Enum):
     
     LEFT = -1
     RIGHT = 1
@@ -9,7 +9,7 @@ class Direction:
     UP = -1
     DOWN = 1
 
-class Status:
+class Status(Enum):
 
     OPEN = 0
     IN_PROGRESS = 1
@@ -24,7 +24,7 @@ class Element:
         self.status = status
         self.canvas = canvas
         self.id =  canvas.create_rectangle(rect, color)
-        self.textId = canvas.create_text(Rect(rect.x, rect.x), text, "white", ("Arial", 12), "nw")
+        self.textId = canvas.create_text(Rect(), text, "white", ("Arial", 12), "nw")
         self.text = text
 
     def isCollide(self, x: int, y: int):

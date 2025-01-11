@@ -152,7 +152,8 @@ class GUI(Tk):
         logoImage = GetImage(LOGO_IMAGE, LOGO_RECT)
         infoImage = GetImage(INFO_IMAGE, INFO_BUTTON_RECT)
         exitImage = GetImage(EXIT_IMAGE, EXIT_BUTTON_RECT)
-
+        addImage = GetImage(ADD_IMAGE, ADD_BUTTON_RECT)
+        
         # Top Canvas
         self.topCanvas = CustomCanvas(self, TOP_COLOR, TOP_RECT)
         self.topCanvas.bind('<Button-1>', self.GetPosition) # Move window with topCanvas. Reference: https://stackoverflow.com/questions/23836000/can-i-change-the-title-bar-in-tkinter
@@ -189,62 +190,60 @@ class GUI(Tk):
         
         # Elements
         self.selectedElement = None
-        self.open = []
-        self.inProgress = []
-        self.done = []
+        self.elements = [[] for _ in Status] # Open, In Progress, Done lists
+
+        self.addButtons = []
+        for status in Status:
+            self.addButtons.append(CustomButton(self.mainCanvas, lambda status=status: self.AddNewElement(status), GRAY, addImage))
 
         # Add some elements
         for i in range(3):
             self.AddNewElement(Status.OPEN)
             self.AddNewElement(Status.IN_PROGRESS)
             self.AddNewElement(Status.DONE)
- 
+
         # Key Bindings
         self.bind('<Right>', lambda e: self.MoveHorizontally(1))
         self.bind('<Left>', lambda e: self.MoveHorizontally(-1))
         self.bind('<Down>', lambda e: self.MoveVertically(1))
         self.bind('<Up>', lambda e: self.MoveVertically(-1))
-        self.bind('<Return>', lambda e: self.AddNewElement(Status.OPEN))
         self.bind('<Delete>', lambda e: self.RemoveElement(self.selectedElement))
 
     #region Element Functions
 
     def GetRect(self, status: str):
 
-        if status is Status.OPEN:
-            return OPEN_RECT
+        if status is None:
+            raise ValueError("Status is None")
         
-        elif status is Status.IN_PROGRESS:
-            return IN_PROGRESS_RECT
-        
-        elif status is Status.DONE:
-            return DONE_RECT
-        return None
+        return [OPEN_RECT, IN_PROGRESS_RECT, DONE_RECT][status.value]
 
     def GetList(self, status: str):
 
-        if status is Status.OPEN:
-            return self.open
+        if status is None:
+            raise ValueError("Status is None")
         
-        elif status is Status.IN_PROGRESS:
-            return self.inProgress
-        
-        elif status is Status.DONE:
-            return self.done
-        return None
+        return self.elements[status.value]
+
+    def GetAddButton(self, status: str):
+
+        if status is None:
+            raise ValueError("Status is None")
+
+        return self.addButtons[status.value]
 
     def AddNewElement(self, status: str):
     
         if status is None:
-            return
+            raise ValueError("Status is None")
 
         self.GetList(status).append(Element(self.mainCanvas, Rect(0, 0, ELEMENT_RECT.width, ELEMENT_RECT.height), BLACK, WHITE, status, "This is an example " + str(len(self.GetList(status)))))
-        self.UpdateElementsPosition(self.GetList(status))
+        self.UpdateElementsPosition(status)
 
     def RemoveElement(self, element: Element):
         
         if element is None:
-            return
+            raise ValueError("Element is None")
 
         self.RemoveElementFromList(element)
         self.mainCanvas.delete(element.id)
@@ -257,11 +256,11 @@ class GUI(Tk):
             return
         
         self.GetList(element.status).remove(element)
-        self.UpdateElementsPosition(self.GetList(element.status))
+        self.UpdateElementsPosition(element.status)
 
     def GetCollidedElement(self, x: int, y: int):
 
-        for element in self.open + self.inProgress + self.done:
+        for element in sum(self.elements, []):
             if element.isCollide(x, y):
                 return element
         return None
@@ -282,63 +281,58 @@ class GUI(Tk):
             
         self.selectedElement = collided_element
         
-        """ Hold and Move doesn't work properly
-        startx, starty = event.x, event.y
-        deltax, deltay = element.rect.left - startx, element.rect.top - starty
+    def UpdateElementsPosition(self, status: Status):
 
-        def MoveElement(event: Event):
-            nonlocal element
-            for element in self.elements:
+        if status is None:
+            raise ValueError("Status is None")
 
-                if element.isCollide(startx, starty):
-                    element.topleft = deltax + event.x, deltay + event.y
-                    element.canvas.coords(element.id, self.rect.left, self.rect.top, self.rect.right, self.rect.bottom)
-                    break
-                
-        self.mainCanvas.bind('<B1-Motion>', MoveElement)
-        """
-
-    def UpdateElementsPosition(self, list: list):
+        list = self.GetList(status)
 
         if list is None:
-            return
+            raise ValueError("List is None")
         
         for element in list:
         
             element.MoveTo(self.GetRect(element.status).left + PADDING, ELEMENT_RECT.y + list.index(element) * (ELEMENT_RECT.height + PADDING))
 
+        # Update add button position
+        if list:
+            self.GetAddButton(list[0].status).place(Rect(list[0].rect.centerX - ADD_BUTTON_RECT.width // 2, list[-1].rect.bottom + PADDING * 2, ADD_BUTTON_RECT.width, ADD_BUTTON_RECT.height))
+        else:
+            self.GetAddButton(status).place(Rect(self.GetRect(status).centerX - ADD_BUTTON_RECT.width // 2, self.GetRect(status).top + TITLE_BOX_HEIGHT + PADDING * 2, ADD_BUTTON_RECT.width, ADD_BUTTON_RECT.height))
+
     def MoveHorizontally(self, direction: Direction):
 
         if not self.selectedElement or not direction:
-            return
-
-        canMoveRight = direction is Direction.RIGHT and self.selectedElement.status is not Status.DONE
-        canMoveLeft = direction is Direction.LEFT and self.selectedElement.status is not Status.OPEN
+            raise ValueError("Selected element or direction is None")
+        
+        canMoveRight = direction == Direction.RIGHT and self.selectedElement.status != Status.DONE
+        canMoveLeft = direction == Direction.LEFT and self.selectedElement.status != Status.OPEN
 
         if not (canMoveRight or canMoveLeft):
-            return
+            raise ValueError("Cannot move to that direction")
         
         self.RemoveElementFromList(self.selectedElement)
         self.selectedElement.status += direction
         self.GetList(self.selectedElement.status).append(self.selectedElement)
-        self.UpdateElementsPosition(self.GetList(self.selectedElement.status))
+        self.UpdateElementsPosition(self.selectedElement.status)
 
     def MoveVertically(self, direction : Direction):
 
         if not self.selectedElement or not direction:
-            return
+            raise ValueError("Selected element or direction is None")
 
         elements = self.GetList(self.selectedElement.status)
         index = elements.index(self.selectedElement)
 
-        canMoveDown = direction is Direction.DOWN and index != len(elements) - 1
-        canMoveUp = direction is Direction.UP and index != 0
+        canMoveDown = direction == Direction.DOWN and index != len(elements) - 1
+        canMoveUp = direction == Direction.UP and index != 0
 
         if not (canMoveDown or canMoveUp):
-            return
+            raise ValueError("Cannot move to that direction")
         
         elements[index], elements[index + direction] = elements[index + direction], elements[index]
-        self.UpdateElementsPosition(elements)
+        self.UpdateElementsPosition(self.selectedElement.status)
 
     #endregion
 
