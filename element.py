@@ -2,15 +2,14 @@ from rect import Rect
 
 class Element:
     
-    OPEN = "STATUS_OPEN"
-    IN_PROGRESS = "STATUS_IN_PROGRESS"
-    DONE = "STATUS_IN_PROGRESS"
+    OPEN = 0
+    IN_PROGRESS = 1
+    DONE = 2
 
-    def __init__(self, canvas, rect: Rect, color: str, selectedColor: str, status: str):
+    def __init__(self, canvas, rect: Rect, color: str, selectedColor: str, status: int):
         
         self.rect = rect
         self.color, self.selectedColor = color, selectedColor
-        self.isSelected = False
         self.status = status
         self.canvas = canvas
         self.id =  canvas.create_rectangle(rect, color)
@@ -22,17 +21,13 @@ class Element:
 
     def Select(self):
 
-        self.isSelected = True
         self.canvas.itemconfig(self.id, fill=self.selectedColor)
 
     def Unselect(self):
 
-        self.isSelected = False
         self.canvas.itemconfig(self.id, fill=self.color)
 
-    def OnClick(self):
+    def MoveTo(self, x: int, y: int):
 
-        if self.isSelected:
-            self.Unselect()
-        else:
-            self.Select()
+        self.rect.topLeft = x, y
+        self.canvas.coords(self.id, self.rect.left, self.rect.top, self.rect.right, self.rect.bottom)

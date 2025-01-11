@@ -82,7 +82,7 @@ class GUI(Tk):
 
             self.geometry(f"{self.rect.width}x{self.rect.height}+{event.x_root + xwin}+{event.y_root + ywin}")
 
-        self.topBar.bind('<B1-Motion>', Move)
+        self.topCanvas.bind('<B1-Motion>', Move)
 
     def OpenInfo(self):
 
@@ -92,35 +92,36 @@ class GUI(Tk):
 
     #endregion
 
+
     def CreateWidgets(self):
-
-        # Main Canvas
-        self.mainCanvas = CustomCanvas(self, BACKGROUND_COLOR, WINDOW_RECT)
-        self.mainCanvas.bind("<Map>", self.Unminimize)
-        self.mainCanvas.bind('<Button-1>', self.SelectElement)
     
-        # TopBar Canvas
-        # Can't use self.mainCanvas.create_rectangle() because I need an object to assign hold and drag function to move window.
-        self.topBar = CustomCanvas(self.mainCanvas, TOPBAR_COLOR, TOPBAR_RECT)
-        self.topBar.bind('<Button-1>', self.GetPosition) # Move window with topbar. Reference: https://stackoverflow.com/questions/23836000/can-i-change-the-title-bar-in-tkinter
-
-        # Logo
+        # load images
         logoImage = GetImage('logo.png', LOGO_RECT)
-        self.topBar.create_image(LOGO_RECT, logoImage)
-
-        # Title
-        self.topBar.create_text(TITLE_RECT, TITLE, TEXT_COLOR, FONT)
-        
         infoImage = GetImage('info.png', INFO_BUTTON_RECT)
-        infoButton = CustomButton(self.topBar, self.OpenInfo, TOPBAR_COLOR, infoImage)
+        exitImage = GetImage('exit_button.png', EXIT_BUTTON_RECT)
+
+        # Top Canvas
+        self.topCanvas = CustomCanvas(self, TOP_COLOR, TOP_RECT)
+        self.topCanvas.bind('<Button-1>', self.GetPosition) # Move window with topCanvas. Reference: https://stackoverflow.com/questions/23836000/can-i-change-the-title-bar-in-tkinter
+
+        # Logo and Title
+        self.topCanvas.create_image(LOGO_RECT, logoImage)
+        self.topCanvas.create_text(TITLE_RECT, TITLE, TEXT_COLOR, FONT)
+        
+        # Buttons
+        infoButton = CustomButton(self.topCanvas, self.OpenInfo, TOP_COLOR, infoImage)
         infoButton.place(INFO_BUTTON_RECT)
 
-        minimizeButton = CustomButton(self.topBar, self.Minimize, TEXT_COLOR, None)
+        minimizeButton = CustomButton(self.topCanvas, self.Minimize, TEXT_COLOR, None)
         minimizeButton.place(MINIMIZE_BUTTON_RECT)
 
-        exitImage = GetImage('exit_button.png', EXIT_BUTTON_RECT)
-        exitButton = CustomButton(self.topBar, lambda: self.destroy(), TOPBAR_COLOR, image=exitImage)
+        exitButton = CustomButton(self.topCanvas, lambda: self.destroy(), TOP_COLOR, image=exitImage)
         exitButton.place(EXIT_BUTTON_RECT)
+
+        # Main Canvas
+        self.mainCanvas = CustomCanvas(self, MAIN_COLOR, MAINCANVAS_RECT)
+        self.mainCanvas.bind("<Map>", self.Unminimize)
+        self.mainCanvas.bind('<Button-1>', self.SelectElement)
 
         self.mainCanvas.create_rectangle(OPEN_RECT, GRAY)
         self.mainCanvas.create_rectangle(IN_PROGRESS_RECT, GRAY)
@@ -134,18 +135,79 @@ class GUI(Tk):
         self.mainCanvas.create_text(IN_PROGRESS_TITLE_RECT, "IN PROGRESS", TEXT_COLOR, font= FONT)
         self.mainCanvas.create_text(DONE_TITLE_RECT, "DONE", TEXT_COLOR, font= FONT)
         
-        self.elements = []
-        self.elements.append(Element(self.mainCanvas, ELEMENT_RECT, BLACK, WHITE, Element.OPEN))
+        # Elements
+        self.selectedElement = None
+        self.open = []
+        self.inProgress = []
+        self.done = []
+
+        
+        self.AddNewElement(Element.OPEN)
+        self.AddNewElement(Element.OPEN)
+
+        self.bind('<Right>', lambda e: self.MoveElement(1))
+        self.bind('<Left>', lambda e: self.MoveElement(-1))
+
+    def GetRect(self, status: str):
+
+        if status == Element.OPEN:
+            return OPEN_RECT
+        
+        elif status == Element.IN_PROGRESS:
+            return IN_PROGRESS_RECT
+        
+        elif status == Element.DONE:
+            return DONE_RECT
+
+    def GetList(self, status: str):
+
+        if status == Element.OPEN:
+            return self.open
+        
+        elif status == Element.IN_PROGRESS:
+            return self.inProgress
+        
+        elif status == Element.DONE:
+            return self.done
+
+    def AddNewElement(self, status: str):
+        
+        width = self.GetRect(status).width - 20
+        height = ELEMENT_RECT.height
+        x = self.GetRect(status).left + 10
+        y = ELEMENT_RECT.y + len(self.open) * (height + 10)
+        
+        self.GetList(status).append(Element(self.mainCanvas, Rect(x, y, width, height), BLACK, WHITE, status))
+    
+    def RemoveElementFromList(self, element: Element):
+
+        self.GetList(element.status).remove(element)
 
     def SelectElement(self, event: Event):
 
-        for element in self.elements:
-
+        collided_element = None
+        for element in self.open + self.inProgress + self.done:
             if element.isCollide(event.x, event.y):
-
-                element.OnClick()
+                collided_element = element
                 break
 
+        if self.selectedElement:
+            
+            self.selectedElement.Unselect()
+        
+        if self.selectedElement == collided_element:
+
+            self.selectedElement = None
+
+        else:
+
+            if collided_element:
+
+                collided_element.Select()
+                
+            self.selectedElement = collided_element
+        
+        """ Doesn't work properly
         startx, starty = event.x, event.y
         deltax, deltay = element.rect.left - startx, element.rect.top - starty
 
@@ -159,6 +221,29 @@ class GUI(Tk):
                     break
                 
         self.mainCanvas.bind('<B1-Motion>', MoveElement)
+        """
+
+    def UpdateList(self, list: list):
+
+        for element in list:
+        
+            element.MoveTo(self.GetRect(element.status).left + 10, ELEMENT_RECT.y + list.index(element) * (ELEMENT_RECT.height + 10))
+
+    def MoveElement(self, direction: int):
+
+        if self.selectedElement:
+
+            canMoveRight = direction == 1 and self.selectedElement.status != Element.DONE
+            canMoveLeft = direction == -1 and self.selectedElement.status != Element.OPEN
+
+            if canMoveRight or canMoveLeft:
+
+                self.RemoveElementFromList(self.selectedElement)
+                self.UpdateList(self.GetList(self.selectedElement.status))
+                self.selectedElement.status += direction
+                self.GetList(self.selectedElement.status).append(self.selectedElement)
+                self.UpdateList(self.GetList(self.selectedElement.status))
+
 
     def Run(self):
 
