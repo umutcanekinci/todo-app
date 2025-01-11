@@ -8,8 +8,8 @@ class CustomCanvas(Canvas):
         super().__init__(
             master,
             bg = color,
-            height = rect.height,
             width = rect.width,
+            height = rect.height,
             bd = 0,
             highlightthickness = 0,
             relief = "ridge"

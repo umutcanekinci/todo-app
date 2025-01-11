@@ -1,19 +1,27 @@
 from rect import Rect
 
+class Direction:
+    
+    LEFT = -1
+    RIGHT = 1
+
+    UP = -1
+    DOWN = 1
+
 class Element:
     
     OPEN = 0
     IN_PROGRESS = 1
     DONE = 2
 
-    def __init__(self, canvas, rect: Rect, color: str, selectedColor: str, status: int):
+    def __init__(self, canvas, rect: Rect, color: str, selectedColor: str, status: int, text):
         
         self.rect = rect
         self.color, self.selectedColor = color, selectedColor
         self.status = status
         self.canvas = canvas
         self.id =  canvas.create_rectangle(rect, color)
-        
+        self.text = text
 
     def isCollide(self, x: int, y: int):
 
