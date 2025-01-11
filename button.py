@@ -1,4 +1,5 @@
 from tkinter import *
+from rect import Rect
 
 class CustomButton(Button):
 
@@ -14,6 +15,6 @@ class CustomButton(Button):
             relief="flat"
         )
 
-    def place(self, rect: tuple[int, int, int, int]):
+    def place(self, rect: Rect):
         
-        super().place(x=rect[0], y=rect[1], width=rect[2], height=rect[3])
+        super().place(x=rect.x, y=rect.y, width=rect.width, height=rect.height)

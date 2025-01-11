@@ -2,12 +2,13 @@ BUGS
 - Minimize button is too small
 - Exit button needs to be fixed for apperance (FIXED)
 - Logo and Info button should be white
+- When press Alt+tab, icon is not coming to the taskbar
+
+
+
 
 Proje Adı:
 ToDoApp
-
-Personal Code:
-***REMOVED***
 
 Features:
 
