@@ -238,13 +238,17 @@ class GUI(Tk):
         if status is None:
             return
 
-        self.GetList(status).append(Element(self.mainCanvas, Rect(0, 0, ELEMENT_RECT.width, ELEMENT_RECT.height), BLACK, WHITE, status, ""))
+        self.GetList(status).append(Element(self.mainCanvas, Rect(0, 0, ELEMENT_RECT.width, ELEMENT_RECT.height), BLACK, WHITE, status, "This is an example " + str(len(self.GetList(status)))))
         self.UpdateElementsPosition(self.GetList(status))
 
     def RemoveElement(self, element: Element):
+        
+        if element is None:
+            return
 
         self.RemoveElementFromList(element)
         self.mainCanvas.delete(element.id)
+        self.mainCanvas.delete(element.textId)
         self.selectedElement = None
 
     def RemoveElementFromList(self, element: Element):

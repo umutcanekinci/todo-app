@@ -1,4 +1,5 @@
 from rect import Rect
+from settings import PADDING, BORDER_COLOR
 
 class Direction:
     
@@ -23,6 +24,7 @@ class Element:
         self.status = status
         self.canvas = canvas
         self.id =  canvas.create_rectangle(rect, color)
+        self.textId = canvas.create_text(Rect(rect.x, rect.x), text, "white", ("Arial", 12), "nw")
         self.text = text
 
     def isCollide(self, x: int, y: int):
@@ -31,13 +33,14 @@ class Element:
 
     def Select(self):
 
-        self.canvas.itemconfig(self.id, fill=self.selectedColor)
+        self.canvas.itemconfig(self.id, outline=BORDER_COLOR, width=2)
 
     def Unselect(self):
 
-        self.canvas.itemconfig(self.id, fill=self.color)
+        self.canvas.itemconfig(self.id, fill=self.color, outline="", width=0)
 
     def MoveTo(self, x: int, y: int):
 
         self.rect.topLeft = x, y
         self.canvas.coords(self.id, self.rect.left, self.rect.top, self.rect.right, self.rect.bottom)
+        self.canvas.coords(self.textId, self.rect.x + PADDING, self.rect.y + PADDING)
