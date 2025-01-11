@@ -73,8 +73,7 @@ class GUI(Tk):
 
         topleftX = self.winfo_x()
         topleftY = self.winfo_y()
-        startx = event.x_root
-        starty = event.y_root
+        startx, starty = event.x_root, event.y_root
 
         ywin = topleftY - starty
         xwin = topleftX - startx
@@ -96,13 +95,13 @@ class GUI(Tk):
     def CreateWidgets(self):
 
         # Main Canvas
-        mainCanvas = CustomCanvas(self, BACKGROUND_COLOR, WINDOW_RECT)
-        mainCanvas.bind("<Map>", self.Unminimize)
-        mainCanvas.bind('<Button-1>', self.SelectElement)
-
+        self.mainCanvas = CustomCanvas(self, BACKGROUND_COLOR, WINDOW_RECT)
+        self.mainCanvas.bind("<Map>", self.Unminimize)
+        self.mainCanvas.bind('<Button-1>', self.SelectElement)
+    
         # TopBar Canvas
-        # Can't use mainCanvas.create_rectangle() because I need an object to assign hold and drag function to move window.
-        self.topBar = CustomCanvas(mainCanvas, TOPBAR_COLOR, TOPBAR_RECT)
+        # Can't use self.mainCanvas.create_rectangle() because I need an object to assign hold and drag function to move window.
+        self.topBar = CustomCanvas(self.mainCanvas, TOPBAR_COLOR, TOPBAR_RECT)
         self.topBar.bind('<Button-1>', self.GetPosition) # Move window with topbar. Reference: https://stackoverflow.com/questions/23836000/can-i-change-the-title-bar-in-tkinter
 
         # Logo
@@ -123,29 +122,43 @@ class GUI(Tk):
         exitButton = CustomButton(self.topBar, lambda: self.destroy(), TOPBAR_COLOR, image=exitImage)
         exitButton.place(EXIT_BUTTON_RECT)
 
-        mainCanvas.create_rectangle(OPEN_RECT, GRAY)
-        mainCanvas.create_rectangle(IN_PROGRESS_RECT, GRAY)
-        mainCanvas.create_rectangle(DONE_RECT, GRAY)
+        self.mainCanvas.create_rectangle(OPEN_RECT, GRAY)
+        self.mainCanvas.create_rectangle(IN_PROGRESS_RECT, GRAY)
+        self.mainCanvas.create_rectangle(DONE_RECT, GRAY)
 
-        mainCanvas.create_rectangle(OPEN_TITLE_BOX_RECT, RED)
-        mainCanvas.create_rectangle(IN_PROGRESS_TITLE_BOX_RECT, YELLOW)
-        mainCanvas.create_rectangle(DONE_TITLE_BOX_RECT, GREEN)
+        self.mainCanvas.create_rectangle(OPEN_TITLE_BOX_RECT, RED)
+        self.mainCanvas.create_rectangle(IN_PROGRESS_TITLE_BOX_RECT, YELLOW)
+        self.mainCanvas.create_rectangle(DONE_TITLE_BOX_RECT, GREEN)
         
-        mainCanvas.create_text(OPEN_TITLE_RECT, "OPEN", TEXT_COLOR, font= FONT)
-        mainCanvas.create_text(IN_PROGRESS_TITLE_RECT, "IN PROGRESS", TEXT_COLOR, font= FONT)
-        mainCanvas.create_text(DONE_TITLE_RECT, "DONE", TEXT_COLOR, font= FONT)
+        self.mainCanvas.create_text(OPEN_TITLE_RECT, "OPEN", TEXT_COLOR, font= FONT)
+        self.mainCanvas.create_text(IN_PROGRESS_TITLE_RECT, "IN PROGRESS", TEXT_COLOR, font= FONT)
+        self.mainCanvas.create_text(DONE_TITLE_RECT, "DONE", TEXT_COLOR, font= FONT)
         
         self.elements = []
-        self.elements.append(Element(mainCanvas, ELEMENT_RECT, BLACK, WHITE, Element.OPEN))
+        self.elements.append(Element(self.mainCanvas, ELEMENT_RECT, BLACK, WHITE, Element.OPEN))
 
     def SelectElement(self, event: Event):
 
         for element in self.elements:
 
             if element.isCollide(event.x, event.y):
-                element.Select()
 
+                element.OnClick()
+                break
 
+        startx, starty = event.x, event.y
+        deltax, deltay = element.rect.left - startx, element.rect.top - starty
+
+        def MoveElement(event: Event):
+            nonlocal element
+            for element in self.elements:
+
+                if element.isCollide(startx, starty):
+                    element.topleft = deltax + event.x, deltay + event.y
+                    element.canvas.coords(element.id, self.rect.left, self.rect.top, self.rect.right, self.rect.bottom)
+                    break
+                
+        self.mainCanvas.bind('<B1-Motion>', MoveElement)
 
     def Run(self):
 

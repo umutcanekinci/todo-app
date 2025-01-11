@@ -5,6 +5,11 @@ class Rect():
         self.x, self.y = x, y
         self.width, self.height = width, height
 
+    def Move(self, x: int, y: int):
+
+        self.x += x
+        self.y += y
+
     @property
     def topLeft(self):
 
@@ -38,12 +43,12 @@ class Rect():
     @property
     def right(self):
 
-        return self.y + self.width
+        return self.x + self.width
     
     @right.setter
     def right(self, value):
 
-        self.y = value - self.width
+        self.x = value - self.width
 
     @property
     def bottom(self):

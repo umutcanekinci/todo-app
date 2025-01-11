@@ -10,6 +10,7 @@ class Element:
         
         self.rect = rect
         self.color, self.selectedColor = color, selectedColor
+        self.isSelected = False
         self.status = status
         self.canvas = canvas
         self.id =  canvas.create_rectangle(rect, color)
@@ -19,15 +20,19 @@ class Element:
 
         return x > self.rect.left and x < self.rect.right and y < self.rect.bottom and y > self.rect.top
 
-    def Move(self, x: int, y: int):
-
-        self.rect.topLeft = x, y
-        self.canvas.coords(self.id, )
-
     def Select(self):
 
+        self.isSelected = True
         self.canvas.itemconfig(self.id, fill=self.selectedColor)
 
     def Unselect(self):
 
+        self.isSelected = False
         self.canvas.itemconfig(self.id, fill=self.color)
+
+    def OnClick(self):
+
+        if self.isSelected:
+            self.Unselect()
+        else:
+            self.Select()
