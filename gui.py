@@ -5,6 +5,7 @@ from canvas import CustomCanvas
 from element import Element, Direction, Status
 
 from tkinter import *
+from tkinter import simpledialog
 from PIL import Image, ImageTk
 
 
@@ -149,23 +150,23 @@ class GUI(Tk):
     def CreateWidgets(self):
     
         # load images
-        logoImage = GetImage(LOGO_IMAGE, LOGO_RECT)
-        infoImage = GetImage(INFO_IMAGE, INFO_BUTTON_RECT)
-        exitImage = GetImage(EXIT_IMAGE, EXIT_BUTTON_RECT)
-        addImage = GetImage(ADD_IMAGE, ADD_BUTTON_RECT)
+        self.logoImage = GetImage(LOGO_IMAGE, LOGO_RECT)
+        self.infoImage = GetImage(INFO_IMAGE, INFO_BUTTON_RECT)
+        self.exitImage = GetImage(EXIT_IMAGE, EXIT_BUTTON_RECT)
+        self.addImage = GetImage(ADD_IMAGE, ADD_BUTTON_RECT)
         
         # Top Canvas
         self.topCanvas = CustomCanvas(self, TOP_COLOR, TOP_RECT)
         self.topCanvas.bind('<Button-1>', self.GetPosition) # Move window with topCanvas. Reference: https://stackoverflow.com/questions/23836000/can-i-change-the-title-bar-in-tkinter
 
         # Logo and Title
-        self.topCanvas.create_image(LOGO_RECT, logoImage)
+        self.topCanvas.create_image(LOGO_RECT, self.logoImage)
         self.topCanvas.create_text(TITLE_RECT, TITLE, TEXT_COLOR, TITLE_FONT)
         
         # Buttons
-        infoButton =     CustomButton(self.topCanvas, self.OpenInfo, TOP_COLOR, infoImage)
+        infoButton =     CustomButton(self.topCanvas, self.OpenInfo, TOP_COLOR, self.infoImage)
         minimizeButton = CustomButton(self.topCanvas, self.Minimize, TEXT_COLOR, None)
-        exitButton =     CustomButton(self.topCanvas, self.Exit, TOP_COLOR, image=exitImage)
+        exitButton =     CustomButton(self.topCanvas, self.Exit, TOP_COLOR, image=self.exitImage)
         
         minimizeButton.place(MINIMIZE_BUTTON_RECT)
         infoButton.place(INFO_BUTTON_RECT)
@@ -194,22 +195,21 @@ class GUI(Tk):
 
         self.addButtons = []
         for status in Status:
-            self.addButtons.append(CustomButton(self.mainCanvas, lambda status=status: self.AddNewElement(status), GRAY, addImage))
-
-        # Add some elements
-        for i in range(3):
-            self.AddNewElement(Status.OPEN)
-            self.AddNewElement(Status.IN_PROGRESS)
-            self.AddNewElement(Status.DONE)
-
+            self.addButtons.append(CustomButton(self.mainCanvas, lambda status=status: self.AddNewElement(status), GRAY, self.addImage))
+            self.UpdateElementsPosition(status)
+            
         # Key Bindings
-        self.bind('<Right>', lambda e: self.MoveHorizontally(1))
-        self.bind('<Left>', lambda e: self.MoveHorizontally(-1))
-        self.bind('<Down>', lambda e: self.MoveVertically(1))
-        self.bind('<Up>', lambda e: self.MoveVertically(-1))
+        self.bind('<Right>', lambda e: self.MoveHorizontally(Direction.RIGHT))
+        self.bind('<Left>', lambda e: self.MoveHorizontally(Direction.LEFT))
+        self.bind('<Down>', lambda e: self.MoveVertically(Direction.DOWN))
+        self.bind('<Up>', lambda e: self.MoveVertically(Direction.UP))
         self.bind('<Delete>', lambda e: self.RemoveElement(self.selectedElement))
 
     #region Element Functions
+
+    def GetInput(self):
+
+        return simpledialog.askstring("Add an element", "Enter the text", parent=self)
 
     def GetRect(self, status: str):
 
@@ -234,10 +234,12 @@ class GUI(Tk):
 
     def AddNewElement(self, status: str):
     
+        text = self.GetInput()
+
         if status is None:
             raise ValueError("Status is None")
 
-        self.GetList(status).append(Element(self.mainCanvas, Rect(0, 0, ELEMENT_RECT.width, ELEMENT_RECT.height), BLACK, WHITE, status, "This is an example " + str(len(self.GetList(status)))))
+        self.GetList(status).append(Element(self.mainCanvas, Rect(0, 0, ELEMENT_RECT.width, ELEMENT_RECT.height), BLACK, WHITE, status, text))
         self.UpdateElementsPosition(status)
 
     def RemoveElement(self, element: Element):
@@ -304,23 +306,23 @@ class GUI(Tk):
     def MoveHorizontally(self, direction: Direction):
 
         if not self.selectedElement or not direction:
-            raise ValueError("Selected element or direction is None")
+            return
         
-        canMoveRight = direction == Direction.RIGHT and self.selectedElement.status != Status.DONE
-        canMoveLeft = direction == Direction.LEFT and self.selectedElement.status != Status.OPEN
+        canMoveRight = direction == Direction.RIGHT and self.selectedElement.status is not Status.DONE
+        canMoveLeft = direction == Direction.LEFT and self.selectedElement.status is not Status.OPEN
 
         if not (canMoveRight or canMoveLeft):
-            raise ValueError("Cannot move to that direction")
+            return
         
         self.RemoveElementFromList(self.selectedElement)
-        self.selectedElement.status += direction
+        self.selectedElement.status = Status(self.selectedElement.status.value + direction.value) 
         self.GetList(self.selectedElement.status).append(self.selectedElement)
         self.UpdateElementsPosition(self.selectedElement.status)
 
     def MoveVertically(self, direction : Direction):
 
         if not self.selectedElement or not direction:
-            raise ValueError("Selected element or direction is None")
+            return
 
         elements = self.GetList(self.selectedElement.status)
         index = elements.index(self.selectedElement)
@@ -329,9 +331,9 @@ class GUI(Tk):
         canMoveUp = direction == Direction.UP and index != 0
 
         if not (canMoveDown or canMoveUp):
-            raise ValueError("Cannot move to that direction")
+            return
         
-        elements[index], elements[index + direction] = elements[index + direction], elements[index]
+        elements[index], elements[index + direction.value] = elements[index + direction.value], elements[index]
         self.UpdateElementsPosition(self.selectedElement.status)
 
     #endregion

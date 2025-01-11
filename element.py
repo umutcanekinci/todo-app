@@ -1,16 +1,15 @@
 from rect import Rect
 from settings import PADDING, BORDER_COLOR
-from enum import Enum
-class Direction(Enum):
-    
+import enum
+
+class Direction(enum.Enum):
+    UP = -1
+    DOWN = 1
     LEFT = -1
     RIGHT = 1
 
-    UP = -1
-    DOWN = 1
-
-class Status(Enum):
-
+@enum.unique
+class Status(enum.Enum):
     OPEN = 0
     IN_PROGRESS = 1
     DONE = 2
@@ -44,3 +43,8 @@ class Element:
         self.rect.topLeft = x, y
         self.canvas.coords(self.id, self.rect.left, self.rect.top, self.rect.right, self.rect.bottom)
         self.canvas.coords(self.textId, self.rect.x + PADDING, self.rect.y + PADDING)
+
+    def ChangeText(self, text: str):
+
+        self.text = text
+        self.canvas.itemconfig(self.textId, text=text)

@@ -8,16 +8,19 @@ TITLE_FONT = ("Inter", 25 * -1)
 # Using that color palette for this application in order to get a harmonical and beatiful color theme:
 # https://colorhunt.co/palette/222831393e4600adb5eeeeee
 
-BLACK = "#441752"
-GRAY = "#8174A0"
-BLUE = "#A888B5"
-WHITE = "#EFB6C8"
+BLACK = "#2C3639"
+GRAY = "#3F4E4F"
+BLUE = "#A27B5C"
+
+#BLACK = "#222831"
+WHITE = "#DCD7C9"
+
 RED = "#578E7E"
-YELLOW = "#FFC145"
+YELLOW = "#F08A5D"
 GREEN = "#5CB338"
 
 BORDER_COLOR = BLUE
-TEXT_COLOR = BLACK  
+TEXT_COLOR = WHITE
 TOP_COLOR = BLUE
 MAIN_COLOR = BLACK
 
