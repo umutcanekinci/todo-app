@@ -21,9 +21,9 @@ class CustomCanvas(Canvas):
         
         return super().create_image(rect.x, rect.y, image=image)
     
-    def create_text(self, rect: Rect, text: str, color: str, font):
+    def create_text(self, rect: Rect, text: str, color: str, font, anchor: str = "nw"):
 
-        return super().create_text(rect.x, rect.y, anchor="nw", text=text, fill=color, font=font)
+        return super().create_text(rect.x, rect.y, anchor=anchor, text=text, fill=color, font=font)
     
     def create_rectangle(self, rect: Rect, color: str):
 

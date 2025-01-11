@@ -21,24 +21,27 @@ class GUI(Tk):
 
         super().__init__()
         self.SetSize(rect)
-        self.SetUnresizable()
-        self.RemoveTitleBar()
+        self.SetUnresizable(self)
+        self.RemoveTitleBar(self)
         self.CreateWidgets()
         self.bind('<Escape>', lambda e: self.Exit())
         self.SetTitle(self, TITLE)
+        self.infoWindow = None
 
     def SetSize(self, rect: Rect):
 
         self.rect = rect
         self.Centerize(self, self.rect)
 
-    def SetUnresizable(self):
+    @staticmethod
+    def SetUnresizable(window, width: bool = False, height: bool = False):
         
-        self.resizable(False, False)
+        window.resizable(width, height)
 
-    def RemoveTitleBar(self):
+    @staticmethod
+    def RemoveTitleBar(window: Misc):
 
-        self.overrideredirect(True)
+        window.overrideredirect(True)
 
     @staticmethod
     def SetTitle(window: Misc, title: str):
@@ -92,15 +95,54 @@ class GUI(Tk):
 
         self.topCanvas.bind('<B1-Motion>', Move)
 
+    def GetPositionInfo(self, event):
+
+        topleftX = self.infoWindow.winfo_x()
+        topleftY = self.infoWindow.winfo_y()
+        startx, starty = event.x_root, event.y_root
+
+        ywin = topleftY - starty
+        xwin = topleftX - startx
+
+        def Move(event):
+
+            self.infoWindow.geometry(f"{INFO_RECT.width}x{INFO_RECT.height}+{event.x_root + xwin}+{event.y_root + ywin}")
+
+        self.infoWindow.bind('<B1-Motion>', Move)
+
+    def Lock(self):
+
+        self.infoWindow.grab_set()
+
+    def Unlock(self):
+
+        self.infoWindow.grab_release()
+
+    def CloseInfo(self):
+
+        self.infoWindow.destroy()
+        self.infoWindow = None
+
     def OpenInfo(self):
+        
+        if self.infoWindow is not None:
+            return
 
-        infoWindow = Toplevel(self)
-        self.Centerize(infoWindow, INFO_RECT)
-        self.SetBackgroundColor(infoWindow, MAIN_COLOR)
-        self.SetTitle(infoWindow, INFO_TITLE)
+        self.infoWindow = Toplevel(self)
+        self.Centerize(self.infoWindow, INFO_RECT)
+        self.SetBackgroundColor(self.infoWindow, MAIN_COLOR)
+        self.SetTitle(self.infoWindow, INFO_TITLE)
+        self.SetUnresizable(self.infoWindow)
+        self.RemoveTitleBar(self.infoWindow)
 
-        Label(infoWindow, text="Made by Umucan Ekinci\n\ngithub.com/umutcanekinci", font=FONT, justify='center', bg=MAIN_COLOR, fg=TEXT_COLOR).pack(pady=30)
-    
+        topCanvas = CustomCanvas(self.infoWindow, TOP_COLOR, Rect(0, 0, INFO_RECT.width, TOP_INFO_HEIGHT))
+        self.infoWindow.bind('<Button-1>', lambda e: self.GetPositionInfo(e))
+
+        topCanvas.create_text(INFO_TITLE_RECT, INFO_TITLE, TEXT_COLOR, TITLE_FONT)
+        Label(self.infoWindow, text="Arrow keys: move the selected element\nEnter: Add an element\nDel: Remove the selected element.\n\nMade by Umutcan Ekinci\ngithub.com/umutcanekinci", font=FONT, justify='center', bg=MAIN_COLOR, fg=TEXT_COLOR).pack(pady=(50, 0))
+        Button(self.infoWindow, text="Close", font=FONT, bg=TOP_COLOR, fg=TEXT_COLOR, command=self.CloseInfo).pack(pady=10)
+
+        self.Lock()
 
     #endregion
 
@@ -117,7 +159,7 @@ class GUI(Tk):
 
         # Logo and Title
         self.topCanvas.create_image(LOGO_RECT, logoImage)
-        self.topCanvas.create_text(TITLE_RECT, TITLE, TEXT_COLOR, FONT)
+        self.topCanvas.create_text(TITLE_RECT, TITLE, TEXT_COLOR, TITLE_FONT)
         
         # Buttons
         infoButton =     CustomButton(self.topCanvas, self.OpenInfo, TOP_COLOR, infoImage)
@@ -151,17 +193,21 @@ class GUI(Tk):
         self.inProgress = []
         self.done = []
 
+        # Add some elements
         for i in range(3):
             self.AddNewElement(Status.OPEN)
             self.AddNewElement(Status.IN_PROGRESS)
             self.AddNewElement(Status.DONE)
  
+        # Key Bindings
         self.bind('<Right>', lambda e: self.MoveHorizontally(1))
         self.bind('<Left>', lambda e: self.MoveHorizontally(-1))
         self.bind('<Down>', lambda e: self.MoveVertically(1))
         self.bind('<Up>', lambda e: self.MoveVertically(-1))
         self.bind('<Return>', lambda e: self.AddNewElement(Status.OPEN))
         self.bind('<Delete>', lambda e: self.RemoveElement(self.selectedElement))
+
+    #region Element Functions
 
     def GetRect(self, status: str):
 
@@ -198,6 +244,7 @@ class GUI(Tk):
     def RemoveElement(self, element: Element):
 
         self.RemoveElementFromList(element)
+        self.mainCanvas.delete(element.id)
         self.selectedElement = None
 
     def RemoveElementFromList(self, element: Element):
@@ -288,6 +335,8 @@ class GUI(Tk):
         
         elements[index], elements[index + direction] = elements[index + direction], elements[index]
         self.UpdateElementsPosition(elements)
+
+    #endregion
 
     def Run(self):
 

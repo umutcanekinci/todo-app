@@ -1,9 +1,10 @@
 BUGS
 - Minimize button is too small
 - Exit button needs to be fixed for apperance (FIXED)
-- Logo and Info button should be white
+- Logo and Info button should be white (FIXED)
 - When press Alt+tab, icon is not coming to the taskbar ? https://stackoverflow.com/questions/60442386/check-if-window-is-in-background-tkinter
-
+- It freezing when trying to delete last element (FIXED)
+- There is no limitation to add elements / there is no any scrollbar or some stuff like it
 
 
 
