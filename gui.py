@@ -2,7 +2,7 @@ from settings import *
 from button import CustomButton
 from rect import Rect
 from canvas import CustomCanvas
-from element import Element, Direction
+from element import Element, Direction, Status
 
 from tkinter import *
 from PIL import Image, ImageTk
@@ -24,6 +24,8 @@ class GUI(Tk):
         self.SetUnresizable()
         self.RemoveTitleBar()
         self.CreateWidgets()
+        self.bind('<Escape>', lambda e: self.Exit())
+        self.SetTitle(self, TITLE)
 
     def SetSize(self, rect: Rect):
 
@@ -39,6 +41,11 @@ class GUI(Tk):
         self.overrideredirect(True)
 
     @staticmethod
+    def SetTitle(window: Misc, title: str):
+
+        window.title(title)
+
+    @staticmethod
     def Centerize(window: Misc, rect: Rect):
 
         # Calculating topleft position of window when it is at the center of screen.
@@ -48,7 +55,7 @@ class GUI(Tk):
 
     @staticmethod
     def SetBackgroundColor(window: Misc, color: str):
-
+        
         window.configure(bg = color)
 
     #endregion
@@ -88,17 +95,21 @@ class GUI(Tk):
     def OpenInfo(self):
 
         infoWindow = Toplevel(self)
-        self.CenterizeWindow(infoWindow, INFO_RECT)
-        Label(infoWindow, text="Made by Umucan Ekinci", font=FONT).place(x=50, y=50)
+        self.Centerize(infoWindow, INFO_RECT)
+        self.SetBackgroundColor(infoWindow, MAIN_COLOR)
+        self.SetTitle(infoWindow, INFO_TITLE)
+
+        Label(infoWindow, text="Made by Umucan Ekinci\n\ngithub.com/umutcanekinci", font=FONT, justify='center', bg=MAIN_COLOR, fg=TEXT_COLOR).pack(pady=30)
+    
 
     #endregion
 
     def CreateWidgets(self):
     
         # load images
-        logoImage = GetImage('logo.png', LOGO_RECT)
-        infoImage = GetImage('info.png', INFO_BUTTON_RECT)
-        exitImage = GetImage('exit_button.png', EXIT_BUTTON_RECT)
+        logoImage = GetImage(LOGO_IMAGE, LOGO_RECT)
+        infoImage = GetImage(INFO_IMAGE, INFO_BUTTON_RECT)
+        exitImage = GetImage(EXIT_IMAGE, EXIT_BUTTON_RECT)
 
         # Top Canvas
         self.topCanvas = CustomCanvas(self, TOP_COLOR, TOP_RECT)
@@ -109,13 +120,12 @@ class GUI(Tk):
         self.topCanvas.create_text(TITLE_RECT, TITLE, TEXT_COLOR, FONT)
         
         # Buttons
-        infoButton = CustomButton(self.topCanvas, self.OpenInfo, TOP_COLOR, infoImage)
-        infoButton.place(INFO_BUTTON_RECT)
-
+        infoButton =     CustomButton(self.topCanvas, self.OpenInfo, TOP_COLOR, infoImage)
         minimizeButton = CustomButton(self.topCanvas, self.Minimize, TEXT_COLOR, None)
+        exitButton =     CustomButton(self.topCanvas, self.Exit, TOP_COLOR, image=exitImage)
+        
         minimizeButton.place(MINIMIZE_BUTTON_RECT)
-
-        exitButton = CustomButton(self.topCanvas, lambda: self.destroy(), TOP_COLOR, image=exitImage)
+        infoButton.place(INFO_BUTTON_RECT)
         exitButton.place(EXIT_BUTTON_RECT)
 
         # Main Canvas
@@ -123,17 +133,17 @@ class GUI(Tk):
         self.mainCanvas.bind("<Map>", self.Unminimize)
         self.mainCanvas.bind('<Button-1>', self.SelectElement)
 
-        self.mainCanvas.create_rectangle(OPEN_RECT, GRAY)
+        self.mainCanvas.create_rectangle(OPEN_RECT,        GRAY)
         self.mainCanvas.create_rectangle(IN_PROGRESS_RECT, GRAY)
-        self.mainCanvas.create_rectangle(DONE_RECT, GRAY)
+        self.mainCanvas.create_rectangle(DONE_RECT,        GRAY)
 
-        self.mainCanvas.create_rectangle(OPEN_TITLE_BOX_RECT, RED)
-        self.mainCanvas.create_rectangle(IN_PROGRESS_TITLE_BOX_RECT, YELLOW)
-        self.mainCanvas.create_rectangle(DONE_TITLE_BOX_RECT, GREEN)
+        self.mainCanvas.create_rectangle(OPEN_TITLE_BOX_RECT, OPEN_COLOR)
+        self.mainCanvas.create_rectangle(IN_PROGRESS_TITLE_BOX_RECT, IN_PROGRESS_COLOR)
+        self.mainCanvas.create_rectangle(DONE_TITLE_BOX_RECT, DONE_COLOR)
         
-        self.mainCanvas.create_text(OPEN_TITLE_RECT, "OPEN", TEXT_COLOR, font= FONT)
+        self.mainCanvas.create_text(OPEN_TITLE_RECT, "OPEN",               TEXT_COLOR, font= FONT)
         self.mainCanvas.create_text(IN_PROGRESS_TITLE_RECT, "IN PROGRESS", TEXT_COLOR, font= FONT)
-        self.mainCanvas.create_text(DONE_TITLE_RECT, "DONE", TEXT_COLOR, font= FONT)
+        self.mainCanvas.create_text(DONE_TITLE_RECT, "DONE",               TEXT_COLOR, font= FONT)
         
         # Elements
         self.selectedElement = None
@@ -142,46 +152,61 @@ class GUI(Tk):
         self.done = []
 
         for i in range(3):
-            self.AddNewElement(Element.OPEN)
-            self.AddNewElement(Element.IN_PROGRESS)
-            self.AddNewElement(Element.DONE)
-
+            self.AddNewElement(Status.OPEN)
+            self.AddNewElement(Status.IN_PROGRESS)
+            self.AddNewElement(Status.DONE)
+ 
         self.bind('<Right>', lambda e: self.MoveHorizontally(1))
         self.bind('<Left>', lambda e: self.MoveHorizontally(-1))
         self.bind('<Down>', lambda e: self.MoveVertically(1))
         self.bind('<Up>', lambda e: self.MoveVertically(-1))
-        self.bind('<Return>', lambda e: self.AddNewElement(self.selectedElement.status))
+        self.bind('<Return>', lambda e: self.AddNewElement(Status.OPEN))
+        self.bind('<Delete>', lambda e: self.RemoveElement(self.selectedElement))
 
     def GetRect(self, status: str):
 
-        if status == Element.OPEN:
+        if status is Status.OPEN:
             return OPEN_RECT
         
-        elif status == Element.IN_PROGRESS:
+        elif status is Status.IN_PROGRESS:
             return IN_PROGRESS_RECT
         
-        elif status == Element.DONE:
+        elif status is Status.DONE:
             return DONE_RECT
+        return None
 
     def GetList(self, status: str):
 
-        if status == Element.OPEN:
+        if status is Status.OPEN:
             return self.open
         
-        elif status == Element.IN_PROGRESS:
+        elif status is Status.IN_PROGRESS:
             return self.inProgress
         
-        elif status == Element.DONE:
+        elif status is Status.DONE:
             return self.done
+        return None
 
     def AddNewElement(self, status: str):
-        
+    
+        if status is None:
+            return
+
         self.GetList(status).append(Element(self.mainCanvas, Rect(0, 0, ELEMENT_RECT.width, ELEMENT_RECT.height), BLACK, WHITE, status, ""))
         self.UpdateElementsPosition(self.GetList(status))
 
-    def RemoveElementFromList(self, element: Element):
+    def RemoveElement(self, element: Element):
 
+        self.RemoveElementFromList(element)
+        self.selectedElement = None
+
+    def RemoveElementFromList(self, element: Element):
+        
+        if element is None:
+            return
+        
         self.GetList(element.status).remove(element)
+        self.UpdateElementsPosition(self.GetList(element.status))
 
     def GetCollidedElement(self, x: int, y: int):
 
@@ -206,7 +231,7 @@ class GUI(Tk):
             
         self.selectedElement = collided_element
         
-        """ Doesn't work properly
+        """ Hold and Move doesn't work properly
         startx, starty = event.x, event.y
         deltax, deltay = element.rect.left - startx, element.rect.top - starty
 
@@ -224,44 +249,50 @@ class GUI(Tk):
 
     def UpdateElementsPosition(self, list: list):
 
+        if list is None:
+            return
+        
         for element in list:
         
             element.MoveTo(self.GetRect(element.status).left + PADDING, ELEMENT_RECT.y + list.index(element) * (ELEMENT_RECT.height + PADDING))
 
     def MoveHorizontally(self, direction: Direction):
 
-        if not self.selectedElement:
+        if not self.selectedElement or not direction:
             return
 
-        canMoveRight = direction == Direction.RIGHT and self.selectedElement.status != Element.DONE
-        canMoveLeft = direction == Direction.LEFT and self.selectedElement.status != Element.OPEN
+        canMoveRight = direction is Direction.RIGHT and self.selectedElement.status is not Status.DONE
+        canMoveLeft = direction is Direction.LEFT and self.selectedElement.status is not Status.OPEN
 
         if not (canMoveRight or canMoveLeft):
             return
         
         self.RemoveElementFromList(self.selectedElement)
-        self.UpdateElementsPosition(self.GetList(self.selectedElement.status))
         self.selectedElement.status += direction
         self.GetList(self.selectedElement.status).append(self.selectedElement)
         self.UpdateElementsPosition(self.GetList(self.selectedElement.status))
 
     def MoveVertically(self, direction : Direction):
 
-        if not self.selectedElement:
+        if not self.selectedElement or not direction:
             return
 
-        l = self.GetList(self.selectedElement.status)
-        index = l.index(self.selectedElement)
+        elements = self.GetList(self.selectedElement.status)
+        index = elements.index(self.selectedElement)
 
-        canMoveDown = direction == Direction.DOWN and index != len(l) - 1
-        canMoveUp = direction == Direction.UP and index != 0
+        canMoveDown = direction is Direction.DOWN and index != len(elements) - 1
+        canMoveUp = direction is Direction.UP and index != 0
 
         if not (canMoveDown or canMoveUp):
             return
         
-        l[index], l[index + direction] = l[index + direction], l[index]
-        self.UpdateElementsPosition(l)
+        elements[index], elements[index + direction] = elements[index + direction], elements[index]
+        self.UpdateElementsPosition(elements)
 
     def Run(self):
 
         self.mainloop()
+
+    def Exit(self):
+
+        self.destroy()

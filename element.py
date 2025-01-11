@@ -8,12 +8,14 @@ class Direction:
     UP = -1
     DOWN = 1
 
-class Element:
-    
+class Status:
+
     OPEN = 0
     IN_PROGRESS = 1
     DONE = 2
 
+class Element:
+    
     def __init__(self, canvas, rect: Rect, color: str, selectedColor: str, status: int, text):
         
         self.rect = rect
