@@ -1,4 +1,4 @@
-from rect import Rect
+from scripts.rect import Rect
 from constants import PADDING, BORDER_COLOR
 
 class Task:

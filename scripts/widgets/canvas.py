@@ -1,5 +1,5 @@
 from tkinter import *
-from rect import Rect
+from scripts.rect import Rect
 class CustomCanvas(Canvas):
 
     def __init__(self, master: Misc | None, color: str, rect: Rect):
