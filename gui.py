@@ -127,22 +127,28 @@ class GUI(Tk):
 
     #endregion
 
-    def OpenInfoWindow(self):
+    def OpenWindow(self, index: int, rect: Rect, title: str, height: int, color: str, textColor: str, font: tuple):
+
+        window = self.windows[index]
         
-        if self.windows[0] is not None:
+        if window is not None:
             return
 
-        self.windows[0] = Toplevel(self)
-        window = self.windows[0]
+        window = Toplevel(self)
+        self.SetWindowSettings(window, rect, title)
+        self.CreateTitleBar(window, height, title, color, textColor, font)
+        self.LockWindow(window)
+        return window
 
-        self.SetWindowSettings(window, INFO_RECT, INFO_TITLE)
-
-        self.CreateTitleBar(window, TOP_INFO_HEIGHT, INFO_TITLE, TOP_COLOR, TEXT_COLOR, TITLE_FONT)
-
+    def OpenInfoWindow(self):
+        
+        window = self.OpenWindow(0, INFO_RECT, INFO_TITLE, TOP_INFO_HEIGHT, TOP_COLOR, TEXT_COLOR, TITLE_FONT)
+        
+        if window is None:
+            return
+        
         Label(window, text="Arrow keys: move the selected task\nEnter: Add a task\nDel: Remove the selected task.\n\nMade by Umutcan Ekinci\ngithub.com/umutcanekinci", font=FONT, justify='center', bg=MAIN_COLOR, fg=TEXT_COLOR).pack(pady=(50, 0))
         Button(window, text="Close", font=FONT, bg=TOP_COLOR, fg=TEXT_COLOR, command=lambda: self.CloseWindow(window)).pack(pady=10)
-
-        self.LockWindow(window)
 
     def OpenDetailWindow(self, e):
 
@@ -154,17 +160,11 @@ class GUI(Tk):
         if not task:
             return
 
-        if self.windows[1] is not None:
-            return
-
-        self.windows[1] = Toplevel(self)
-        window = self.windows[1]
-
-        self.SetWindowSettings(window, DETAIL_RECT, DETAIL_TITLE)
-
-        self.CreateTitleBar(window, TOP_INFO_HEIGHT, DETAIL_TITLE, TOP_COLOR, TEXT_COLOR, TITLE_FONT)
+        window = self.OpenWindow(1, DETAIL_RECT, DETAIL_TITLE, TOP_INFO_HEIGHT, TOP_COLOR, TEXT_COLOR, TITLE_FONT)
         
-    
+        if window is None:
+            return
+        
         Label(window, text=f"Text: {task.text}", font=FONT, justify='left', bg=MAIN_COLOR, fg=TEXT_COLOR).pack(pady=(50, 0), padx=0)
         Button(window, text="Close", font=FONT, bg=TOP_COLOR, fg=TEXT_COLOR, command= lambda: self.CloseWindow(window)).pack(pady=10)
 
@@ -172,14 +172,10 @@ class GUI(Tk):
 
     def OpenAddWindow(self):
 
-        if self.windows[2] is not None:
+        window = self.OpenWindow(2, ADD_RECT, ADD_TITLE, TOP_INFO_HEIGHT, TOP_COLOR, TEXT_COLOR, TITLE_FONT)
+        
+        if window is None:
             return
-
-        self.windows[2] = Toplevel(self)
-        window = self.windows[2]
-
-        self.SetWindowSettings(window, ADD_RECT, ADD_TITLE)
-        self.CreateTitleBar(window, TOP_INFO_HEIGHT, ADD_TITLE, TOP_COLOR, TEXT_COLOR, TITLE_FONT)
 
         Label(window, text="Enter the text", font=FONT, justify='center', bg=MAIN_COLOR, fg=TEXT_COLOR).pack(pady=(50, 0))
         Button(window, text="Close", font=FONT, bg=TOP_COLOR, fg=TEXT_COLOR, command= lambda: self.CloseWindow(window)).pack(pady=10)
