@@ -1,18 +1,12 @@
 from settings import *
-from button import CustomButton
+from widgets.button import CustomButton
+from widgets.canvas import CustomCanvas
+from widgets.element import Element
 from rect import Rect
-from canvas import CustomCanvas
-from element import Element, Direction, Status
-
+from enums import Direction, Status
+from utils import GetImage
 from tkinter import *
 from tkinter import simpledialog
-from PIL import Image, ImageTk
-
-
-def GetImage(file: str, rect: Rect):
-
-    # PhotoImage(file="'./assets/'+file") # Does not working for pngs somehow
-    return ImageTk.PhotoImage(Image.open('./assets/' + file).resize(rect.size))
 
 class GUI(Tk):
     
@@ -306,7 +300,6 @@ class GUI(Tk):
 
         self.UpdateAddButtonPosition(status)
 
-
     def UpdateAddButtonPosition(self, status: Status):
 
         list = self.GetList(status)        
@@ -320,7 +313,6 @@ class GUI(Tk):
         
         else:
             self.GetAddButton(status).place(Rect(self.GetRect(status).centerX - ADD_BUTTON_RECT.width // 2, self.GetRect(status).top + TITLE_BOX_HEIGHT + PADDING * 2, ADD_BUTTON_RECT.width, ADD_BUTTON_RECT.height))
-
 
     def MoveHorizontally(self, direction: Direction):
 

@@ -1,54 +1,32 @@
 BUGS
-- Minimize button is too small
-- Exit button needs to be fixed for apperance (FIXED)
-- Logo and Info button should be white (FIXED)
-- When press Alt+tab, icon is not coming to the taskbar ? https://stackoverflow.com/questions/60442386/check-if-window-is-in-background-tkinter
-- It freezing when trying to delete last element (FIXED)
-- There is no limitation to add elements / there is no any scrollbar or some stuff like it
+- Minimize button is too small                                          (FIXED)
+- Exit button needs to be fixed for appearance                          (FIXED)
+- Logo and Info button should be white                                  (FIXED)
+- When pressing Alt+tab, icon is not coming to the taskbar                          (https://stackoverflow.com/questions/60442386/check-if-window-is-in-background-tkinter.9
+- It freezes when trying to delete the last element                     (FIXED)
+- There is no limitation to add elements                                (FIXED)
+- There is no scrollbar or something like it
 
+FEATURES
+- Users can add tasks to a list.                                          (+)
+- The status of tasks (open/inprogress/done) is shown on the list screen. (+)
+- Tasks can have a "Title" and "Description" added.                       (-)
+- Tasks can have three statuses: Open, In Progress, Done                  (+)
+- Tasks can be selected to view details.                                  (-)
+- Title or description can be updated on the detail screen.               (-)
+- Tasks can be searched by title.                                         (-)
+- Tasks can be filtered by status (e.g., show only "Done" tasks).         (-)
+- The list is saved to a file in JSON format.                             (-)
+- When the application is reopened, previous tasks are restored.          (-)
+- Users can switch between "Light" and "Dark" themes.                     (-)
+- A due date can be set when adding tasks.                                (-)
+- Overdue tasks are marked in red.                                        (-)
 
-
-Proje Adı:
-ToDoApp
-
-Features:
-
-İş Listesi Yönetimi:
-Kullanıcı, yapılacak işleri bir listeye ekleyebilir.
-Eklenen işlere "Başlık" ve "Açıklama" eklenebilir.
-Liste ekranında işlerin durumu (open/inprogress/done) gösterilir.
-Durum Yönetimi:
-
-İşler üç statüye sahip olabilir:
-Open: Yeni eklenen işler bu statüde başlar.
-In Progress: İşler üzerinde çalışılmaya başlandığında bu duruma alınır.
-Done: Tamamlanan işler bu duruma alınır.
-Open'dan doğrudan Done durumuna geçilebilir ama In Progress durumuna geçilemez.
-Detay Görüntüleme ve Düzenleme:
-
-İşlerin detaylarını görmek için seçilebilir.
-Detay ekranında başlık veya açıklama güncellenebilir.
-Arama ve Filtreleme:
-
-İşler başlığa göre aranabilir.
-Statüye göre filtrelenebilir. (Sadece "Done" işleri göster, vb.)
-Kayıt ve Geri Yükleme:
-
-Liste, JSON formatında bir dosyaya kaydedilir.
-Uygulama yeniden açıldığında, önceki işler geri yüklenir.
-Tema Değiştirme:
-
-Kullanıcı "Açık" ve "Koyu" tema arasında geçiş yapabilir.
-Zaman Takibi (Ekstra Özellik):
-
-İşler eklenirken son teslim tarihi belirlenebilir.
-Zamanı geçen işler kırmızıyla işaretlenir.
-Proje Yapısı (Structure):
-
-1. Ana Dosya:
+Project Structure:
+1. Main File:
 main.py
-Tkinter ile ana kullanıcı arayüzünü oluşturur.
-2. Modüller:
-models.py: İşlerin veri modelini içerir.
-storage.py: JSON dosyasına veri kaydetme ve geri yükleme işlemleri.
-utils.py: Yardımcı fonksiyonlar (ör. tarih karşılaştırma).
+Creates the main user interface with Tkinter.
+2. Modules:
+models.py: Contains the data model for tasks.
+storage.py: Handles saving and loading data to/from a JSON file.
+utils.py: Helper functions (e.g., date comparison).
