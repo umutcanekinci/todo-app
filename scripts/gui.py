@@ -2,9 +2,9 @@ from constants import *
 from widgets.button import CustomButton
 from widgets.canvas import CustomCanvas
 from widgets.task import Task
-from scripts.rect import Rect
+from rect import Rect
 from enums import Direction, Status
-from scripts.utils import GetImage
+from utils import GetImage
 from database import Database
 
 from tkinter import Tk, Toplevel, Label, Button, Text, Frame, StringVar, OptionMenu, Event, Misc, TOP, LEFT, BOTTOM

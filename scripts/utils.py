@@ -1,5 +1,5 @@
 from PIL import Image, ImageTk
-from scripts.rect import Rect
+from rect import Rect
 from datetime import datetime
 
 def GetImage(file: str, rect: Rect):

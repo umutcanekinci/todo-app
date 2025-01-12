@@ -1,5 +1,5 @@
 from tkinter import *
-from scripts.rect import Rect
+from rect import Rect
 
 class CustomButton(Button):
 

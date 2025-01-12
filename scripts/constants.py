@@ -67,7 +67,7 @@ TASK_HEIGHT = 60 # This is initial height of the tasks but it can be changed acc
 
 TITLE_POSITION =  56, MAIN_TITLEBAR_HEIGHT // 2
 
-from scripts.rect import Rect
+from rect import Rect
 
 # Window Rects
 WINDOW_RECT = Rect(0, 0, *WINDOW_SIZE)
