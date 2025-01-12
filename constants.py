@@ -1,3 +1,5 @@
+DATABASE_PATH = "database.db"
+
 #region TITLES
 
 TITLE = "TODO APP"

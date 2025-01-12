@@ -6,6 +6,9 @@ def main():
     
     app = GUI()
     app.Run()
+    app.SaveTasks()
+    del app
+
 
 if __name__ == "__main__":
 

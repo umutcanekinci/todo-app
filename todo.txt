@@ -13,23 +13,15 @@ BUGS
 FEATURES
 - Users can add tasks to a list.                                          (+)
 - The status of tasks (open/inprogress/done) is shown on the list screen. (+)
-- Tasks can have a "Title" and "Description" added.                       (-)
+- Tasks can have a "Title" and "Description" added.                       (+)
 - Tasks can have three statuses: Open, In Progress, Done                  (+)
-- Tasks can be selected to view details.                                  (-)
+- Tasks can be selected to view details.                                  (+)
 - Title or description can be updated on the detail screen.               (-)
 - Tasks can be searched by title.                                         (-)
 - Tasks can be filtered by status (e.g., show only "Done" tasks).         (-)
-- The list is saved to a file in JSON format.                             (-)
-- When the application is reopened, previous tasks are restored.          (-)
+- The list is saved to a file in JSON format.                             (+)
+- When the application is reopened, previous tasks are restored.          (+)
 - Users can switch between "Light" and "Dark" themes.                     (-)
-- A due date can be set when adding tasks.                                (-)
+- A due date can be set when adding tasks.                                (+)
 - Overdue tasks are marked in red.                                        (-)
-
-Project Structure:
-1. Main File:
-main.py
-Creates the main user interface with Tkinter.
-2. Modules:
-models.py: Contains the data model for tasks.
-storage.py: Handles saving and loading data to/from a JSON file.
-utils.py: Helper functions (e.g., date comparison).
+- Switch between professional and personal tasks                          (-)

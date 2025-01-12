@@ -5,9 +5,11 @@ from widgets.task import Task
 from rect import Rect
 from enums import Direction, Status
 from utils import GetImage
-from tkinter import *
+from database import Database
+
+from tkinter import Tk, Toplevel, Label, Button, Text, Frame, StringVar, OptionMenu, Event, Misc, TOP, LEFT, BOTTOM
 from tkinter import colorchooser
-from tkcalendar import Calendar, DateEntry
+from tkcalendar import DateEntry
 
 class GUI(Tk):
     
@@ -21,9 +23,11 @@ class GUI(Tk):
         self.tasks = [[] for _ in Status] # Open, In Progress, Done Task lists
         self.selectedTask = None
         self.colorchooserValue = BLACK
-
+        self.database = Database(DATABASE_PATH)
+        
         self.SetWindowSettings(self, rect, TITLE)
         self.CreateWidgets()
+        self.LoadTasks()
 
     @staticmethod
     def SetWindowSettings(window: Toplevel | Misc, rect: Rect, title: str):
@@ -133,6 +137,34 @@ class GUI(Tk):
     #endregion
 
     #region Window Methods
+    
+    #region Database Methods
+
+    def CreateTableIfNotExists(self):
+
+        self.database.Execute("CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY, status TEXT, title TEXT, detail TEXT, color TEXT, deadLine TEXT)")
+
+    def LoadTasks(self):
+
+        self.CreateTableIfNotExists()
+        rows = self.database.FetchAll("SELECT * FROM tasks")
+
+        if not rows:
+            return
+
+        for row in rows:
+            status, title, detail, color, deadLine = row[1:]
+            self.AddNewTask(Status[status], title, detail, color, deadLine)
+
+    def SaveTasks(self):
+        
+        self.database.Execute("DELETE FROM tasks")
+
+        for taskList in self.tasks:
+            for task in taskList:
+                self.database.Execute("INSERT INTO tasks (status, title, detail, color, deadLine) VALUES (?, ?, ?, ?, ?)", task.status.name, task.title, task.detail, task.color, task.deadLine)
+
+    #endregion
 
     def OpenWindow(self, index: int, rect: Rect, title: str, height: int, color: str, textColor: str, font: tuple):
 
