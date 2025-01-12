@@ -1,4 +1,4 @@
-from settings import *
+from constants import *
 from gui import GUI
 from tkinter import *
 

@@ -1,3 +1,5 @@
+The reason why I use canvas -> https://stackoverflow.com/questions/78168757/when-should-i-use-a-canvas-vs-a-label#:~:text=If%20you%20need%20to%20display,a%20frame%20aren't%20scrollable.
+
 BUGS
 - Minimize button is too small                                          (FIXED)
 - Exit button needs to be fixed for appearance                          (FIXED)

@@ -1,27 +1,28 @@
 from rect import Rect
-from settings import PADDING, BORDER_COLOR
+from constants import PADDING, BORDER_COLOR
 
 class Task:
     
-    def __init__(self, canvas, rect: Rect, color: str, selectedColor: str, status: int, text):
+    def __init__(self, canvas, rect: Rect, color: str, selectedColor: str, status: int, title, detail, deadLine):
         
         self.rect = rect
         self.color, self.selectedColor = color, selectedColor
+        self.title, self.detail = title, detail
         self.status = status
         self.canvas = canvas
+        self.deadLine = deadLine
         self.id =  canvas.create_rectangle(rect, color)
-        self.text = text
-        self.textId = canvas.create_text(self.rect.center, text, "white", ("Arial", 12))
+        self.titleId = canvas.create_text(self.rect.center, title, "white", ("Arial", 12))
         
-        isTextWidthGreater = canvas.GetItemWidth(self.textId) > rect.width - PADDING * 2
+        isTextWidthGreater = canvas.GetItemWidth(self.titleId) > rect.width - PADDING * 2
         if  isTextWidthGreater:
-            canvas.SetItemWidth(self.textId, rect.width - PADDING * 2)
+            canvas.SetItemWidth(self.titleId, rect.width - PADDING * 2)
 
-        isTextHeightGreater = canvas.GetItemHeight(self.textId) > rect.height - PADDING * 2
+        isTextHeightGreater = canvas.GetItemHeight(self.titleId) > rect.height - PADDING * 2
         if isTextHeightGreater:
-            self.rect.height = canvas.GetItemHeight(self.textId) + PADDING * 2
+            self.rect.height = canvas.GetItemHeight(self.titleId) + PADDING * 2
 
-        self.textWidth, self.textHeight = canvas.GetItemSize(self.textId)
+        self.textWidth, self.textHeight = canvas.GetItemSize(self.titleId)
 
     def isCollide(self, x: int, y: int):
 
@@ -40,4 +41,4 @@ class Task:
         self.rect.topLeft = x, y
         
         self.canvas.SetRectanglePosition(self.id, self.rect)
-        self.canvas.SetTextPosition(self.textId, self.rect.center)
+        self.canvas.SetTextPosition(self.titleId, self.rect.center)
