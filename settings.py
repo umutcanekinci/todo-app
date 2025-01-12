@@ -41,7 +41,7 @@ TOP_HEIGHT = 45
 TOP_INFO_HEIGHT = 30
 PANEL_WIDTH = 466
 TITLE_BOX_HEIGHT = 40
-ELEMENT_HEIGHT = 80
+ELEMENT_HEIGHT = 60 # This is initial height of the element but it can be changed according to the text size
 
 #endregion
 

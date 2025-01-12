@@ -233,11 +233,14 @@ class GUI(Tk):
         return self.addButtons[status.value]
 
     def AddNewElement(self, status: str):
-    
-        text = self.GetInput()
 
         if status is None:
             raise ValueError("Status is None")
+
+        text = self.GetInput()
+
+        if not text:
+            return
 
         self.GetList(status).append(Element(self.mainCanvas, Rect(0, 0, ELEMENT_RECT.width, ELEMENT_RECT.height), BLACK, WHITE, status, text))
         self.UpdateElementsPosition(status)
@@ -293,15 +296,31 @@ class GUI(Tk):
         if list is None:
             raise ValueError("List is None")
         
-        for element in list:
+        for i, element in enumerate(list):
         
-            element.MoveTo(self.GetRect(element.status).left + PADDING, ELEMENT_RECT.y + list.index(element) * (ELEMENT_RECT.height + PADDING))
+            if i:
+                element.MoveTo(self.GetRect(status).left + PADDING, list[i - 1].rect.bottom + PADDING)
+                continue
+            
+            element.MoveTo(self.GetRect(element.status).left + PADDING, ELEMENT_RECT.y)
 
-        # Update add button position
+        self.UpdateAddButtonPosition(status)
+
+
+    def UpdateAddButtonPosition(self, status: Status):
+
+        list = self.GetList(status)        
+
+        if list and list[-1].rect.bottom + PADDING * 2 + ELEMENT_HEIGHT > self.GetRect(status).bottom:
+            self.GetAddButton(status).place_forget()
+            return
+
         if list:
             self.GetAddButton(list[0].status).place(Rect(list[0].rect.centerX - ADD_BUTTON_RECT.width // 2, list[-1].rect.bottom + PADDING * 2, ADD_BUTTON_RECT.width, ADD_BUTTON_RECT.height))
+        
         else:
             self.GetAddButton(status).place(Rect(self.GetRect(status).centerX - ADD_BUTTON_RECT.width // 2, self.GetRect(status).top + TITLE_BOX_HEIGHT + PADDING * 2, ADD_BUTTON_RECT.width, ADD_BUTTON_RECT.height))
+
 
     def MoveHorizontally(self, direction: Direction):
 

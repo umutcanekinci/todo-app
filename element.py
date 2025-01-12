@@ -24,7 +24,17 @@ class Element:
         self.canvas = canvas
         self.id =  canvas.create_rectangle(rect, color)
         self.textId = canvas.create_text(Rect(), text, "white", ("Arial", 12), "nw")
-        self.text = text
+        
+        
+        isTextWidthGreater = canvas.GetItemWidth(self.textId) > rect.width - PADDING * 2
+        if  isTextWidthGreater:
+            canvas.SetItemWidth(self.textId, rect.width - PADDING * 2)
+
+        isTextHeightGreater = canvas.GetItemHeight(self.textId) > rect.height - PADDING * 2
+        if isTextHeightGreater:
+            self.rect.height = canvas.GetItemHeight(self.textId) + PADDING * 2
+
+        self.textWidth, self.textHeight = canvas.GetItemSize(self.textId)
 
     def isCollide(self, x: int, y: int):
 
@@ -41,10 +51,8 @@ class Element:
     def MoveTo(self, x: int, y: int):
 
         self.rect.topLeft = x, y
-        self.canvas.coords(self.id, self.rect.left, self.rect.top, self.rect.right, self.rect.bottom)
-        self.canvas.coords(self.textId, self.rect.x + PADDING, self.rect.y + PADDING)
+        textRect = Rect(0, 0, self.textWidth, self.textHeight)
+        textRect.center = self.rect.center
 
-    def ChangeText(self, text: str):
-
-        self.text = text
-        self.canvas.itemconfig(self.textId, text=text)
+        self.canvas.SetRectanglePosition(self.id, self.rect)
+        self.canvas.SetTextPosition(self.textId, textRect)
