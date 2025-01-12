@@ -5,6 +5,10 @@ class Rect():
         self.x, self.y = x, y
         self.width, self.height = width, height
 
+    def __str__(self):
+        
+        return f"Rect({self.x}, {self.y}, {self.width}, {self.height})"
+
     def Move(self, x: int, y: int):
 
         self.x += x

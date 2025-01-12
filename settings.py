@@ -1,7 +1,18 @@
+#region TITLES
+
 TITLE = "TODO APP"
 INFO_TITLE = "INFO"
+DETAIL_TITLE = "DETAILS"
+ADD_TITLE = "ADD NEW TASK"
+
+#endregion
+
+#region FONTS
+
 FONT = ("Inter", 23 * -1, 'bold')
 TITLE_FONT = ("Inter", 25 * -1)
+
+#endregion
 
 #region COLORS
 
@@ -11,8 +22,6 @@ TITLE_FONT = ("Inter", 25 * -1)
 BLACK = "#2C3639"
 GRAY = "#3F4E4F"
 BLUE = "#A27B5C"
-
-#BLACK = "#222831"
 WHITE = "#DCD7C9"
 
 RED = "#578E7E"
@@ -32,16 +41,21 @@ DONE_COLOR = GREEN
 
 #region SIZES
 
-WINDOW_SIZE = (1440, 900)
-INFO_SIZE = (550, 300)
+WINDOW_SIZE = 1440, 900
+INFO_SIZE = 550, 300
+DETAIL_SIZE = 550, 600
+ADD_SIZE = 550, 600
+
 PADDING = 10
 ICON_SIZE = 25
 LOGO_SIZE = 35
+
 TOP_HEIGHT = 45
 TOP_INFO_HEIGHT = 30
+
 PANEL_WIDTH = 466
 TITLE_BOX_HEIGHT = 40
-ELEMENT_HEIGHT = 60 # This is initial height of the element but it can be changed according to the text size
+TASK_HEIGHT = 60 # This is initial height of the tasks but it can be changed according to the text size
 
 #endregion
 
@@ -52,6 +66,8 @@ from rect import Rect
 # Window Rects
 WINDOW_RECT = Rect(0, 0, WINDOW_SIZE[0], WINDOW_SIZE[1])
 INFO_RECT =   Rect(0, 0, INFO_SIZE[0], INFO_SIZE[1])
+DETAIL_RECT = Rect(0, 0, DETAIL_SIZE[0], DETAIL_SIZE[1])
+ADD_RECT =    Rect(0, 0, ADD_SIZE[0], ADD_SIZE[1])
 
 # Canvas Rects
 TOP_RECT = Rect(0, 0, WINDOW_RECT.width, TOP_HEIGHT)
@@ -72,17 +88,13 @@ OPEN_TITLE_BOX_RECT =        Rect(OPEN_RECT.x,        OPEN_RECT.y,        OPEN_R
 IN_PROGRESS_TITLE_BOX_RECT = Rect(IN_PROGRESS_RECT.x, IN_PROGRESS_RECT.y, IN_PROGRESS_RECT.width, TITLE_BOX_HEIGHT)
 DONE_TITLE_BOX_RECT =        Rect(DONE_RECT.x,        DONE_RECT.y,        DONE_RECT.width,        TITLE_BOX_HEIGHT)
 
-ELEMENT_RECT = Rect(0, OPEN_TITLE_BOX_RECT.bottom + PADDING, OPEN_RECT.width - PADDING * 2, ELEMENT_HEIGHT)
+TASK_RECT = Rect(0, OPEN_TITLE_BOX_RECT.bottom + PADDING, PANEL_WIDTH - PADDING * 2, TASK_HEIGHT)
 
 #endregion
 
 #region TEXT RECTS
 
-TITLE_RECT =  Rect(56, 9)
-INFO_TITLE_RECT = Rect(INFO_RECT.centerX - 30, 3)
-OPEN_TITLE_RECT =        Rect(OPEN_RECT.centerX - 25,        OPEN_RECT.y + PADDING - 1)
-IN_PROGRESS_TITLE_RECT = Rect(IN_PROGRESS_RECT.centerX - 75, IN_PROGRESS_RECT.y + PADDING - 1)
-DONE_TITLE_RECT =        Rect(DONE_RECT.centerX - 25,        DONE_RECT.y + PADDING - 1)
+TITLE_POSITION =  56, TOP_HEIGHT // 2
 
 #endregion
 
@@ -92,4 +104,5 @@ LOGO_IMAGE = "logo.png"
 INFO_IMAGE = "info.png"
 EXIT_IMAGE = "exit_button.png"
 ADD_IMAGE = "add_button.png"
+
 #endregion

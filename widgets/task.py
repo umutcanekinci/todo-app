@@ -1,7 +1,7 @@
 from rect import Rect
 from settings import PADDING, BORDER_COLOR
 
-class Element:
+class Task:
     
     def __init__(self, canvas, rect: Rect, color: str, selectedColor: str, status: int, text):
         
@@ -10,8 +10,8 @@ class Element:
         self.status = status
         self.canvas = canvas
         self.id =  canvas.create_rectangle(rect, color)
-        self.textId = canvas.create_text(Rect(), text, "white", ("Arial", 12), "nw")
-        
+        self.text = text
+        self.textId = canvas.create_text(self.rect.center, text, "white", ("Arial", 12))
         
         isTextWidthGreater = canvas.GetItemWidth(self.textId) > rect.width - PADDING * 2
         if  isTextWidthGreater:
@@ -38,8 +38,6 @@ class Element:
     def MoveTo(self, x: int, y: int):
 
         self.rect.topLeft = x, y
-        textRect = Rect(0, 0, self.textWidth, self.textHeight)
-        textRect.center = self.rect.center
-
+        
         self.canvas.SetRectanglePosition(self.id, self.rect)
-        self.canvas.SetTextPosition(self.textId, textRect)
+        self.canvas.SetTextPosition(self.textId, self.rect.center)

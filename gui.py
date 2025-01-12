@@ -1,7 +1,7 @@
 from settings import *
 from widgets.button import CustomButton
 from widgets.canvas import CustomCanvas
-from widgets.element import Element
+from widgets.task import Task
 from rect import Rect
 from enums import Direction, Status
 from utils import GetImage
@@ -15,18 +15,20 @@ class GUI(Tk):
     def __init__(self, rect: Rect = WINDOW_RECT):
 
         super().__init__()
-        self.SetSize(rect)
-        self.SetUnresizable(self)
-        self.RemoveTitleBar(self)
-        self.CreateWidgets()
-        self.bind('<Escape>', lambda e: self.Exit())
-        self.SetTitle(self, TITLE)
-        self.infoWindow = None
-
-    def SetSize(self, rect: Rect):
-
         self.rect = rect
-        self.Centerize(self, self.rect)
+        self.SetWindowSettings(self, rect, TITLE)
+        self.CreateWidgets()
+        self.windows = [None, None, None] # List of windows: infoWindow, detailWindow, addWindow
+
+    @staticmethod
+    def SetWindowSettings(window: Toplevel | Misc, rect: Rect, title: str):
+
+        GUI.Centerize(window, rect)
+        GUI.SetBackgroundColor(window, MAIN_COLOR)
+        GUI.SetTitle(window, title)
+        GUI.SetUnresizable(window)
+        GUI.RemoveTitleBar(window)
+        window.bind('<Escape>', lambda e: GUI.CloseWindow(window))
 
     @staticmethod
     def SetUnresizable(window, width: bool = False, height: bool = False):
@@ -56,6 +58,54 @@ class GUI(Tk):
         
         window.configure(bg = color)
 
+    @staticmethod
+    def LockWindow(window: Toplevel):
+
+        window.grab_set()
+
+    @staticmethod
+    def CloseWindow(window: Toplevel | Misc | None):
+
+        if window is None:
+            return
+
+        window.destroy()
+        widndow = None
+
+    @staticmethod
+    def GetWindowPosition(event, window: Toplevel | Misc, rect: Rect, topCanvas: CustomCanvas):
+
+        topleftX = window.winfo_x()
+        topleftY = window.winfo_y()
+        startx, starty = event.x_root, event.y_root
+
+        ywin = topleftY - starty
+        xwin = topleftX - startx
+
+        def Move(event):
+
+            window.geometry(f"{rect.width}x{rect.height}+{event.x_root + xwin}+{event.y_root + ywin}")
+
+        topCanvas.bind('<B1-Motion>', Move)
+
+    @staticmethod
+    def GetWindowRect(window: Toplevel | Misc):
+
+        window.update_idletasks() 
+        return Rect(window.winfo_x(), window.winfo_y(), window.winfo_width(), window.winfo_height())
+
+    @staticmethod
+    def CreateTitleBar(window: Toplevel | Misc, height: int, title: str, color: str, titleColor: str, titleFont: tuple):
+
+        windowRect = GUI.GetWindowRect(window)
+        rect = Rect(0, 0, windowRect.width, height)
+
+        topCanvas = CustomCanvas(window, color, rect)
+        topCanvas.create_text(rect.center, title, titleColor, titleFont)
+        topCanvas.bind('<Button-1>', lambda e: GUI.GetWindowPosition(e, window, windowRect, topCanvas))
+
+        return topCanvas
+
     #endregion
 
     #region Titlebar Functions
@@ -75,71 +125,66 @@ class GUI(Tk):
 
         #self.iconify() # Giving error
 
-    def GetPosition(self, event):
+    #endregion
 
-        topleftX = self.winfo_x()
-        topleftY = self.winfo_y()
-        startx, starty = event.x_root, event.y_root
-
-        ywin = topleftY - starty
-        xwin = topleftX - startx
-
-        def Move(event):
-
-            self.geometry(f"{self.rect.width}x{self.rect.height}+{event.x_root + xwin}+{event.y_root + ywin}")
-
-        self.topCanvas.bind('<B1-Motion>', Move)
-
-    def GetPositionInfo(self, event):
-
-        topleftX = self.infoWindow.winfo_x()
-        topleftY = self.infoWindow.winfo_y()
-        startx, starty = event.x_root, event.y_root
-
-        ywin = topleftY - starty
-        xwin = topleftX - startx
-
-        def Move(event):
-
-            self.infoWindow.geometry(f"{INFO_RECT.width}x{INFO_RECT.height}+{event.x_root + xwin}+{event.y_root + ywin}")
-
-        self.infoWindow.bind('<B1-Motion>', Move)
-
-    def Lock(self):
-
-        self.infoWindow.grab_set()
-
-    def Unlock(self):
-
-        self.infoWindow.grab_release()
-
-    def CloseInfo(self):
-
-        self.infoWindow.destroy()
-        self.infoWindow = None
-
-    def OpenInfo(self):
+    def OpenInfoWindow(self):
         
-        if self.infoWindow is not None:
+        if self.windows[0] is not None:
             return
 
-        self.infoWindow = Toplevel(self)
-        self.Centerize(self.infoWindow, INFO_RECT)
-        self.SetBackgroundColor(self.infoWindow, MAIN_COLOR)
-        self.SetTitle(self.infoWindow, INFO_TITLE)
-        self.SetUnresizable(self.infoWindow)
-        self.RemoveTitleBar(self.infoWindow)
+        self.windows[0] = Toplevel(self)
+        window = self.windows[0]
 
-        topCanvas = CustomCanvas(self.infoWindow, TOP_COLOR, Rect(0, 0, INFO_RECT.width, TOP_INFO_HEIGHT))
-        self.infoWindow.bind('<Button-1>', lambda e: self.GetPositionInfo(e))
+        self.SetWindowSettings(window, INFO_RECT, INFO_TITLE)
 
-        topCanvas.create_text(INFO_TITLE_RECT, INFO_TITLE, TEXT_COLOR, TITLE_FONT)
-        Label(self.infoWindow, text="Arrow keys: move the selected element\nEnter: Add an element\nDel: Remove the selected element.\n\nMade by Umutcan Ekinci\ngithub.com/umutcanekinci", font=FONT, justify='center', bg=MAIN_COLOR, fg=TEXT_COLOR).pack(pady=(50, 0))
-        Button(self.infoWindow, text="Close", font=FONT, bg=TOP_COLOR, fg=TEXT_COLOR, command=self.CloseInfo).pack(pady=10)
+        self.CreateTitleBar(window, TOP_INFO_HEIGHT, INFO_TITLE, TOP_COLOR, TEXT_COLOR, TITLE_FONT)
 
-        self.Lock()
+        Label(window, text="Arrow keys: move the selected task\nEnter: Add a task\nDel: Remove the selected task.\n\nMade by Umutcan Ekinci\ngithub.com/umutcanekinci", font=FONT, justify='center', bg=MAIN_COLOR, fg=TEXT_COLOR).pack(pady=(50, 0))
+        Button(window, text="Close", font=FONT, bg=TOP_COLOR, fg=TEXT_COLOR, command=lambda: self.CloseWindow(window)).pack(pady=10)
 
-    #endregion
+        self.LockWindow(window)
+
+    def OpenDetailWindow(self, e):
+
+        if not self.selectedTask:
+            return
+        
+        task = self.GetCollidedTask(e.x, e.y)
+
+        if not task:
+            return
+
+        if self.windows[1] is not None:
+            return
+
+        self.windows[1] = Toplevel(self)
+        window = self.windows[1]
+
+        self.SetWindowSettings(window, DETAIL_RECT, DETAIL_TITLE)
+
+        self.CreateTitleBar(window, TOP_INFO_HEIGHT, DETAIL_TITLE, TOP_COLOR, TEXT_COLOR, TITLE_FONT)
+        
+    
+        Label(window, text=f"Text: {task.text}", font=FONT, justify='left', bg=MAIN_COLOR, fg=TEXT_COLOR).pack(pady=(50, 0), padx=0)
+        Button(window, text="Close", font=FONT, bg=TOP_COLOR, fg=TEXT_COLOR, command= lambda: self.CloseWindow(window)).pack(pady=10)
+
+        self.LockWindow(window)
+
+    def OpenAddWindow(self):
+
+        if self.windows[2] is not None:
+            return
+
+        self.windows[2] = Toplevel(self)
+        window = self.windows[2]
+
+        self.SetWindowSettings(window, ADD_RECT, ADD_TITLE)
+        self.CreateTitleBar(window, TOP_INFO_HEIGHT, ADD_TITLE, TOP_COLOR, TEXT_COLOR, TITLE_FONT)
+
+        Label(window, text="Enter the text", font=FONT, justify='center', bg=MAIN_COLOR, fg=TEXT_COLOR).pack(pady=(50, 0))
+        Button(window, text="Close", font=FONT, bg=TOP_COLOR, fg=TEXT_COLOR, command= lambda: self.CloseWindow(window)).pack(pady=10)
+
+        self.LockWindow(window)
 
     def CreateWidgets(self):
     
@@ -150,17 +195,16 @@ class GUI(Tk):
         self.addImage = GetImage(ADD_IMAGE, ADD_BUTTON_RECT)
         
         # Top Canvas
-        self.topCanvas = CustomCanvas(self, TOP_COLOR, TOP_RECT)
-        self.topCanvas.bind('<Button-1>', self.GetPosition) # Move window with topCanvas. Reference: https://stackoverflow.com/questions/23836000/can-i-change-the-title-bar-in-tkinter
+        topCanvas = self.CreateTitleBar(self, TOP_HEIGHT, '', TOP_COLOR, TEXT_COLOR, TITLE_FONT)
 
         # Logo and Title
-        self.topCanvas.create_image(LOGO_RECT, self.logoImage)
-        self.topCanvas.create_text(TITLE_RECT, TITLE, TEXT_COLOR, TITLE_FONT)
+        topCanvas.create_image(LOGO_RECT, self.logoImage)
+        topCanvas.create_text(TITLE_POSITION, TITLE, TEXT_COLOR, TITLE_FONT, 'w')
         
         # Buttons
-        infoButton =     CustomButton(self.topCanvas, self.OpenInfo, TOP_COLOR, self.infoImage)
-        minimizeButton = CustomButton(self.topCanvas, self.Minimize, TEXT_COLOR, None)
-        exitButton =     CustomButton(self.topCanvas, self.Exit, TOP_COLOR, image=self.exitImage)
+        infoButton =     CustomButton(topCanvas, self.OpenInfoWindow, TOP_COLOR, self.infoImage)
+        minimizeButton = CustomButton(topCanvas, self.Minimize, TEXT_COLOR, None)
+        exitButton =     CustomButton(topCanvas, lambda: self.CloseWindow(self), TOP_COLOR, image=self.exitImage)
         
         minimizeButton.place(MINIMIZE_BUTTON_RECT)
         infoButton.place(INFO_BUTTON_RECT)
@@ -169,7 +213,7 @@ class GUI(Tk):
         # Main Canvas
         self.mainCanvas = CustomCanvas(self, MAIN_COLOR, MAIN_RECT)
         self.mainCanvas.bind("<Map>", self.Unminimize)
-        self.mainCanvas.bind('<Button-1>', self.SelectElement)
+        self.mainCanvas.bind('<Button-1>', self.SelectTask)
 
         self.mainCanvas.create_rectangle(OPEN_RECT,        GRAY)
         self.mainCanvas.create_rectangle(IN_PROGRESS_RECT, GRAY)
@@ -179,31 +223,32 @@ class GUI(Tk):
         self.mainCanvas.create_rectangle(IN_PROGRESS_TITLE_BOX_RECT, IN_PROGRESS_COLOR)
         self.mainCanvas.create_rectangle(DONE_TITLE_BOX_RECT, DONE_COLOR)
         
-        self.mainCanvas.create_text(OPEN_TITLE_RECT, "OPEN",               TEXT_COLOR, font= FONT)
-        self.mainCanvas.create_text(IN_PROGRESS_TITLE_RECT, "IN PROGRESS", TEXT_COLOR, font= FONT)
-        self.mainCanvas.create_text(DONE_TITLE_RECT, "DONE",               TEXT_COLOR, font= FONT)
+        self.mainCanvas.create_text(OPEN_TITLE_BOX_RECT.center, "OPEN",               TEXT_COLOR, FONT)
+        self.mainCanvas.create_text(IN_PROGRESS_TITLE_BOX_RECT.center, "IN PROGRESS", TEXT_COLOR, FONT)
+        self.mainCanvas.create_text(DONE_TITLE_BOX_RECT.center, "DONE",               TEXT_COLOR, FONT)
         
-        # Elements
-        self.selectedElement = None
-        self.elements = [[] for _ in Status] # Open, In Progress, Done lists
+        # Tasks
+        self.selectedTask = None
+        self.tasks = [[] for _ in Status] # Open, In Progress, Done lists
 
         self.addButtons = []
         for status in Status:
-            self.addButtons.append(CustomButton(self.mainCanvas, lambda status=status: self.AddNewElement(status), GRAY, self.addImage))
-            self.UpdateElementsPosition(status)
+            self.addButtons.append(CustomButton(self.mainCanvas, lambda status=status: self.AddNewTask(status), GRAY, self.addImage))
+            self.UpdateTasksPosition(status)
             
         # Key Bindings
         self.bind('<Right>', lambda e: self.MoveHorizontally(Direction.RIGHT))
         self.bind('<Left>', lambda e: self.MoveHorizontally(Direction.LEFT))
         self.bind('<Down>', lambda e: self.MoveVertically(Direction.DOWN))
         self.bind('<Up>', lambda e: self.MoveVertically(Direction.UP))
-        self.bind('<Delete>', lambda e: self.RemoveElement(self.selectedElement))
+        self.bind('<Delete>', lambda e: self.RemoveTask(self.selectedTask))
+        self.bind('<Double-Button-1>', self.OpenDetailWindow)
 
-    #region Element Functions
+    #region Task Functions
 
     def GetInput(self):
 
-        return simpledialog.askstring("Add an element", "Enter the text", parent=self)
+        return simpledialog.askstring("Add a task", "Enter the text", parent=self)
 
     def GetRect(self, status: str):
 
@@ -217,7 +262,7 @@ class GUI(Tk):
         if status is None:
             raise ValueError("Status is None")
         
-        return self.elements[status.value]
+        return self.tasks[status.value]
 
     def GetAddButton(self, status: str):
 
@@ -226,7 +271,7 @@ class GUI(Tk):
 
         return self.addButtons[status.value]
 
-    def AddNewElement(self, status: str):
+    def AddNewTask(self, status: str):
 
         if status is None:
             raise ValueError("Status is None")
@@ -236,51 +281,51 @@ class GUI(Tk):
         if not text:
             return
 
-        self.GetList(status).append(Element(self.mainCanvas, Rect(0, 0, ELEMENT_RECT.width, ELEMENT_RECT.height), BLACK, WHITE, status, text))
-        self.UpdateElementsPosition(status)
+        self.GetList(status).append(Task(self.mainCanvas, Rect(0, 0, TASK_RECT.width, TASK_RECT.height), BLACK, WHITE, status, text))
+        self.UpdateTasksPosition(status)
 
-    def RemoveElement(self, element: Element):
+    def RemoveTask(self, task: Task):
         
-        if element is None:
-            raise ValueError("Element is None")
+        if task is None:
+            raise ValueError("Task is None")
 
-        self.RemoveElementFromList(element)
-        self.mainCanvas.delete(element.id)
-        self.mainCanvas.delete(element.textId)
-        self.selectedElement = None
+        self.RemoveTaskFromList(task)
+        self.mainCanvas.delete(task.id)
+        self.mainCanvas.delete(task.textId)
+        self.selectedTask = None
 
-    def RemoveElementFromList(self, element: Element):
+    def RemoveTaskFromList(self, task: Task):
         
-        if element is None:
+        if task is None:
             return
         
-        self.GetList(element.status).remove(element)
-        self.UpdateElementsPosition(element.status)
+        self.GetList(task.status).remove(task)
+        self.UpdateTasksPosition(task.status)
 
-    def GetCollidedElement(self, x: int, y: int):
+    def GetCollidedTask(self, x: int, y: int):
 
-        for element in sum(self.elements, []):
-            if element.isCollide(x, y):
-                return element
+        for task in sum(self.tasks, []):
+            if task.isCollide(x, y):
+                return task
         return None
 
-    def SelectElement(self, event: Event):
+    def SelectTask(self, event: Event):
 
-        collided_element = self.GetCollidedElement(event.x, event.y)
+        collided_task = self.GetCollidedTask(event.x, event.y)
 
-        if self.selectedElement:
-            self.selectedElement.Unselect()
+        if self.selectedTask:
+            self.selectedTask.Unselect()
         
-        if self.selectedElement is collided_element:
-            self.selectedElement = None
+        if self.selectedTask is collided_task:
+            self.selectedTask = None
             return
         
-        if collided_element:
-            collided_element.Select()
+        if collided_task:
+            collided_task.Select()
             
-        self.selectedElement = collided_element
+        self.selectedTask = collided_task
         
-    def UpdateElementsPosition(self, status: Status):
+    def UpdateTasksPosition(self, status: Status):
 
         if status is None:
             raise ValueError("Status is None")
@@ -290,13 +335,13 @@ class GUI(Tk):
         if list is None:
             raise ValueError("List is None")
         
-        for i, element in enumerate(list):
+        for i, task in enumerate(list):
         
             if i:
-                element.MoveTo(self.GetRect(status).left + PADDING, list[i - 1].rect.bottom + PADDING)
+                task.MoveTo(self.GetRect(status).left + PADDING, list[i - 1].rect.bottom + PADDING)
                 continue
             
-            element.MoveTo(self.GetRect(element.status).left + PADDING, ELEMENT_RECT.y)
+            task.MoveTo(self.GetRect(task.status).left + PADDING, TASK_RECT.y)
 
         self.UpdateAddButtonPosition(status)
 
@@ -304,7 +349,7 @@ class GUI(Tk):
 
         list = self.GetList(status)        
 
-        if list and list[-1].rect.bottom + PADDING * 2 + ELEMENT_HEIGHT > self.GetRect(status).bottom:
+        if list and list[-1].rect.bottom + PADDING * 2 + TASK_HEIGHT > self.GetRect(status).bottom:
             self.GetAddButton(status).place_forget()
             return
 
@@ -316,43 +361,39 @@ class GUI(Tk):
 
     def MoveHorizontally(self, direction: Direction):
 
-        if not self.selectedElement or not direction:
+        if not self.selectedTask or not direction:
             return
         
-        canMoveRight = direction == Direction.RIGHT and self.selectedElement.status is not Status.DONE
-        canMoveLeft = direction == Direction.LEFT and self.selectedElement.status is not Status.OPEN
+        canMoveRight = direction == Direction.RIGHT and self.selectedTask.status is not Status.DONE
+        canMoveLeft = direction == Direction.LEFT and self.selectedTask.status is not Status.OPEN
 
         if not (canMoveRight or canMoveLeft):
             return
         
-        self.RemoveElementFromList(self.selectedElement)
-        self.selectedElement.status = Status(self.selectedElement.status.value + direction.value) 
-        self.GetList(self.selectedElement.status).append(self.selectedElement)
-        self.UpdateElementsPosition(self.selectedElement.status)
+        self.RemoveTaskFromList(self.selectedTask)
+        self.selectedTask.status = Status(self.selectedTask.status.value + direction.value) 
+        self.GetList(self.selectedTask.status).append(self.selectedTask)
+        self.UpdateTasksPosition(self.selectedTask.status)
 
     def MoveVertically(self, direction : Direction):
 
-        if not self.selectedElement or not direction:
+        if not self.selectedTask or not direction:
             return
 
-        elements = self.GetList(self.selectedElement.status)
-        index = elements.index(self.selectedElement)
+        tasks = self.GetList(self.selectedTask.status)
+        index = tasks.index(self.selectedTask)
 
-        canMoveDown = direction == Direction.DOWN and index != len(elements) - 1
+        canMoveDown = direction == Direction.DOWN and index != len(tasks) - 1
         canMoveUp = direction == Direction.UP and index != 0
 
         if not (canMoveDown or canMoveUp):
             return
         
-        elements[index], elements[index + direction.value] = elements[index + direction.value], elements[index]
-        self.UpdateElementsPosition(self.selectedElement.status)
+        tasks[index], tasks[index + direction.value] = tasks[index + direction.value], tasks[index]
+        self.UpdateTasksPosition(self.selectedTask.status)
 
     #endregion
 
     def Run(self):
 
         self.mainloop()
-
-    def Exit(self):
-
-        self.destroy()

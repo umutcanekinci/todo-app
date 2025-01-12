@@ -6,6 +6,7 @@ BUGS
 - It freezes when trying to delete the last element                     (FIXED)
 - There is no limitation to add elements                                (FIXED)
 - There is no scrollbar or something like it
+- Sometimes TopLevel windows are not oppening
 
 FEATURES
 - Users can add tasks to a list.                                          (+)

@@ -21,10 +21,10 @@ class CustomCanvas(Canvas):
         
         return super().create_image(rect.x, rect.y, image=image)
     
-    def create_text(self, rect: Rect, text: str, color: str, font, anchor: str = "nw"):
+    def create_text(self, position: tuple[int], text: str, color: str, font, anchor: str = 'center'):
 
-        return super().create_text(rect.x, rect.y, anchor=anchor, text=text, fill=color, font=font)
-    
+        return super().create_text(*position, anchor=anchor, text=text, fill=color, font=font)
+        
     def create_rectangle(self, rect: Rect, color: str):
 
         return super().create_rectangle(rect.left, rect.top, rect.right, rect.bottom, fill=color)
@@ -57,6 +57,6 @@ class CustomCanvas(Canvas):
 
         self.coords(id, rect.left, rect.top, rect.right, rect.bottom)
 
-    def SetTextPosition(self, id: int, rect: Rect):
+    def SetTextPosition(self, id: int, position: tuple[int]):
 
-        self.coords(id, rect.x, rect.y)
+        self.coords(id, *position)
