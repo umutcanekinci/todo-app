@@ -21,7 +21,7 @@ TITLE_FONT = ("Inter", 25 * -1)
 #region COLORS
 
 # Using that color palette for this application in order to get a harmonical and beatiful color theme:
-# https://colorhunt.co/palette/222831393e4600adb5eeeeee
+#https://colorhunt.co/palette/ad8b73ceab93e3caa5fffbe9
 
 BLACK = "#2C3639"
 GRAY = "#3F4E4F"
