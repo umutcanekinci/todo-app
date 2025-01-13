@@ -2,3 +2,4 @@
 /frame0
 *.db
 */__pycache__
+/.vscode
