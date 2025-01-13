@@ -6,7 +6,8 @@ This is a simple **To-Do List** application built with Python and Tkinter. It al
 
 ![Screenshot 2025-01-13 144107](https://github.com/user-attachments/assets/a68b43d9-a9bb-4434-83b6-d857bf4755c1)
 ![Screenshot 2025-01-13 144146](https://github.com/user-attachments/assets/de13f5b0-9bc7-4c4e-87f8-181674ff6870)
-![image](https://github.com/user-attachments/assets/d78b35ca-a02a-4534-9e4f-369247bf5f68)
+![image](https://github.com/user-attachments/assets/bad311cb-1a2a-491e-9229-aa8013bc720f)
+
 
 
 ---
