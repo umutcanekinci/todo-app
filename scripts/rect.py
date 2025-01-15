@@ -14,6 +14,8 @@ class Rect():
         self.x += x
         self.y += y
 
+    #region Properties
+
     @property
     def topLeft(self):
 
@@ -98,3 +100,5 @@ class Rect():
     def size(self):
 
         return self.width, self.height
+    
+    #endregion

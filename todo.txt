@@ -9,6 +9,8 @@ BUGS
 - There is no limitation to add elements                                (FIXED)
 - There is no scrollbar or something like it
 - Sometimes TopLevel windows are not oppening
+- We wasn't able to add tasks to In Progress group.                     (FIXED)
+
 
 FEATURES
 - Users can add tasks to a list.                                          (+)
@@ -21,7 +23,7 @@ FEATURES
 - Tasks can be filtered by status (e.g., show only "Done" tasks).         (-)
 - The list is saved to a file in JSON format.                             (+)
 - When the application is reopened, previous tasks are restored.          (+)
-- Users can switch between "Light" and "Dark" themes.                     (-)
+- Users can switch between "Light" and "Dark" themes.                     (+)
 - A due date can be set when adding tasks.                                (+)
 - Overdue tasks are marked in red.                                        (-)
 - Switch between professional and personal tasks                          (-)
