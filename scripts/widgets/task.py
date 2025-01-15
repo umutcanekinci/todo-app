@@ -1,12 +1,13 @@
 from rect import Rect
-from constants import PADDING, BORDER_COLOR
+from constants import PADDING
+from utils import isPointInRectangle
 
 class Task:
     
-    def __init__(self, canvas, rect: Rect, color: str, selectedColor: str, status: int, title, detail, deadLine):
+    def __init__(self, canvas, rect: Rect, color: str, status: int, title, detail, deadLine):
         
         self.rect = rect
-        self.color, self.selectedColor = color, selectedColor
+        self.color = color
         self.title, self.detail = title, detail
         self.status = status
         self.canvas = canvas
@@ -26,11 +27,11 @@ class Task:
 
     def isCollide(self, x: int, y: int):
 
-        return x > self.rect.left and x < self.rect.right and y < self.rect.bottom and y > self.rect.top
+        return isPointInRectangle(self.rect, x, y)
 
-    def Select(self):
+    def Select(self, borderColor: str):
 
-        self.canvas.itemconfig(self.id, outline=BORDER_COLOR, width=2)
+        self.canvas.itemconfig(self.id, outline=borderColor, width=2)
 
     def Unselect(self):
 

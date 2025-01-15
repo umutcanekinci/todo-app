@@ -7,7 +7,7 @@ class CustomCanvas(Canvas):
         self.rect = rect
         super().__init__(
             master,
-            bg = color,
+            bg = color if color else "white",
             width = rect.width,
             height = rect.height,
             bd = 0,
@@ -17,6 +17,10 @@ class CustomCanvas(Canvas):
 
         self.place(x=rect.x, y=rect.y)
 
+    def ChangeColor(self, color: str):
+
+        self.config(bg=color)
+
     def create_image(self, rect: Rect, image: PhotoImage):
         
         return super().create_image(rect.x, rect.y, image=image)
@@ -25,7 +29,7 @@ class CustomCanvas(Canvas):
 
         return super().create_text(*position, anchor=anchor, text=text, fill=color, font=font)
         
-    def create_rectangle(self, rect: Rect, color: str):
+    def create_rectangle(self, rect: Rect, color: str = None):
 
         return super().create_rectangle(rect.left, rect.top, rect.right, rect.bottom, fill=color)
     
