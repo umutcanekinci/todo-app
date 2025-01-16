@@ -100,11 +100,11 @@ class GUI(Tk):
         ywin = topleftY - starty
         xwin = topleftX - startx
 
-        def Move(event) -> None:
+        def MoveWindow(event) -> None:
 
             window.geometry(f"{rect.width}x{rect.height}+{event.x_root + xwin}+{event.y_root + ywin}")
 
-        titleBar.bind('<B1-Motion>', Move)
+        titleBar.bind('<B1-Motion>', MoveWindow)
 
     @staticmethod
     def GetWindowRect(window: Toplevel | Misc) -> Rect:
@@ -300,7 +300,7 @@ class GUI(Tk):
             return
         
         status = Status[self.statusVar.get().upper().replace(' ', '_')]
-        self.AddNewTask(status, title, self.detailText.get("1.0", "end-1c"), self.colorchooserValue if self.colorchooserValue else THEMES[self.themeVar.get()][0], self.deadLineEntry.get())
+        self.AddNewTask(status, title, self.detailText.get("1.0", "end-1c"), self.colorchooserValue if self.colorchooserValue else self.GetColor(0), self.deadLineEntry.get())
 
     def OpenEditWindow(self):
 
@@ -401,8 +401,7 @@ class GUI(Tk):
                     item.config(bg=color, activebackground=color, highlightbackground=color)
 
         if self.selectedTask:
-
-            self.selectedTask.Select(THEMES[self.themeVar.get()][3])
+            self.selectedTask.Select(self.GetColor(3))
 
         for addButton in self.addButtons:
             addButton.ChangeColor(theme[1])
@@ -466,7 +465,7 @@ class GUI(Tk):
             return
         
         if collided_task:
-            collided_task.Select(THEMES[self.themeVar.get()][3])
+            collided_task.Select(self.GetColor(3))
             
         self.selectedTask = collided_task
         

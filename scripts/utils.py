@@ -27,7 +27,7 @@ def isOverdue(deadLine: str):
 
 def isPointInRectangle(rect: Rect, x: int, y: int):
 
-    if not rect or x != None or y != None:
+    if not rect or x == None or y == None:
         return None
     
     return x > rect.left and x < rect.right and y > rect.top and y < rect.bottom
