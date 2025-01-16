@@ -1,5 +1,5 @@
 /.venv
 /frame0
 *.db
-*/__pycache__
+*.pyc
 /.vscode
