@@ -43,3 +43,7 @@ class Task:
         
         self.canvas.SetRectanglePosition(self.id, self.rect)
         self.canvas.SetTextPosition(self.titleId, self.rect.center)
+
+    def Move(self, dx: int, dy: int):
+
+        return self.MoveTo(self.rect.x + dx, self.rect.y + dy)

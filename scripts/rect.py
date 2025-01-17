@@ -9,10 +9,19 @@ class Rect():
         
         return f"Rect({self.x}, {self.y}, {self.width}, {self.height})"
 
+    def __add__(self, other):
+
+        return Rect(self.x + other.x, self.y + other.y, self.width, self.height)
+    
+    def __sub__(self, other):
+
+        return Rect(self.x - other.x, self.y - other.y, self.width, self.height)
+
     def Move(self, x: int, y: int):
 
         self.x += x
         self.y += y
+
 
     #region Properties
 
