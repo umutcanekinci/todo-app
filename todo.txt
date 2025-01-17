@@ -9,6 +9,7 @@ BUGS
 - There is no limitation to add elements                                (FIXED)
 - There is no scrollbar or something like it
 - Sometimes TopLevel windows are not oppening
+- Sometimes selecting tasks by clicking is not working
 - We wasn't able to add tasks to In Progress group.                     (FIXED)
 
 

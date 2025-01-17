@@ -34,17 +34,13 @@ def isPointInRectangle(rect: Rect, x: int, y: int):
 
 #region GetRects
 
-def GetAddButtonRect(lastTaskRect: Rect) -> Rect:
+def GetTitleBoxRect(status: Status) -> Rect:
 
-    return Rect(lastTaskRect.centerX - ADD_BUTTON_RECT.width // 2, lastTaskRect.bottom + PADDING * 2, ADD_BUTTON_RECT.width, ADD_BUTTON_RECT.height)
+    return Rect(PADDING + (GROUP_WIDTH + PADDING) * status.value, PADDING, GROUP_WIDTH, TITLE_BOX_HEIGHT)
 
 def GetGroupRect(status: Status) -> Rect:
 
-    return Rect(PADDING + (GROUP_WIDTH + PADDING) * status.value, PADDING, GROUP_WIDTH, GetMainCanvasRect(MAIN_TITLEBAR_HEIGHT, WINDOW_RECTS["main"]).height - PADDING * 2)
-
-def GetTitleBoxRect(status: Status) -> Rect:
-
-    return Rect(*GetGroupRect(status).topLeft, GROUP_WIDTH, TITLE_BOX_HEIGHT)
+    return Rect(PADDING + (GROUP_WIDTH + PADDING) * status.value,TITLE_BOX_HEIGHT + PADDING * 2, GROUP_WIDTH, GetMainCanvasRect(MAIN_TITLEBAR_HEIGHT, WINDOW_RECTS["main"]).height - PADDING * 2 - TITLE_BOX_HEIGHT)
 
 def GetMainCanvasRect(titleBarHeight: int, windowRect: Rect) -> Rect:
 
@@ -53,5 +49,12 @@ def GetMainCanvasRect(titleBarHeight: int, windowRect: Rect) -> Rect:
 def GetTaskRect() -> Rect:
 
     return Rect(0, 0, GROUP_WIDTH - PADDING * 2, MIN_TASK_HEIGHT)
+
+def GetNextTaskPosition(status, group, i: int) -> tuple[int]:
+
+    if not status or i == None:
+        return None
+
+    return PADDING, group[i - 1].rect.bottom + PADDING if i else PADDING
 
 #endregion

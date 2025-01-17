@@ -16,12 +16,14 @@ class CustomButton(Button):
             activebackground=color,
             relief="flat"
         )
-
-        self.place(rect)
-
-    def place(self, rect: Rect):
         
-        super().place(x=rect.x, y=rect.y, width=rect.width, height=rect.height)
+        self.rect = rect
+        self.place(rect.center)
+
+    def place(self, position: tuple[int]):
+
+        self.rect.center = position        
+        super().place(x=position[0], y=position[1], width=self.rect.width, height=self.rect.height, anchor='center')
 
     def ChangeColor(self, color: str):
 

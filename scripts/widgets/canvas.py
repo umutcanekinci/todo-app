@@ -12,7 +12,8 @@ class CustomCanvas(Canvas):
             height = rect.height,
             bd = 0,
             highlightthickness = 0,
-            relief = "ridge"
+            relief = "ridge",
+            scrollregion=(0, 0, rect.width, rect.height*2)
         )
 
         self.place(x=rect.x, y=rect.y)

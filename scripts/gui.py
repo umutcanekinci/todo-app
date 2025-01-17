@@ -20,9 +20,13 @@ class GUI(Tk):
 
         super().__init__()
         self.rect = rect
-        self.windows = [None for _ in TITLES] # List of windows: infoWindow, detailWindow, addWindow, editWindow
-        self.tasks = [[] for _ in Status] # Open, In Progress, Done Task Groups
-        self.addButtons = []
+        self.windows    = [None for _ in TITLES] # List of windows: infoWindow, detailWindow, addWindow, editWindow
+        self.tasks      = [[] for _ in Status] # Open, In Progress, Done Task Groups
+        self.groups     = [None for _ in Status]
+        self.scrollbars = [None for _ in Status]
+        self.addButtons = [None for _ in Status]
+        
+
         self.selectedTask = None
         self.colorchooserValue = None
         self.isTaskMoving = False
@@ -85,7 +89,7 @@ class GUI(Tk):
         window.focus_set()
 
     @staticmethod
-    def CloseWindow(window: Toplevel | Misc | None, topWindow: Toplevel | Misc) -> None:
+    def CloseWindow(window: Toplevel | Misc | None, topWindow: Toplevel | Misc = None) -> None:
 
         if not window.winfo_exists():
             return
@@ -409,8 +413,6 @@ class GUI(Tk):
     def CreateMainCanvas(self):
 
         self.mainCanvas = CustomCanvas(self, None, GetMainCanvasRect(MAIN_TITLEBAR_HEIGHT, self.rect))
-        self.mainCanvas.bind("<Map>", self.Unminimize)
-        self.mainCanvas.bind('<Button-1>', self.SelectTask)
         self.themeElements[0].append(self.mainCanvas)
  
     def CreateGroups(self):
@@ -421,14 +423,18 @@ class GUI(Tk):
     
     def CreateGroup(self, status: Status):
 
-        self.themeElements[1].append(self.mainCanvas.create_rectangle(GetGroupRect(status)))
+        canvas = CustomCanvas(self.mainCanvas, 'white', GetGroupRect(status))
+        self.groups[status.value] = canvas
+        self.themeElements[1].append(canvas)
         self.mainCanvas.create_rectangle(GetTitleBoxRect(status), TEXTBOX_COLORS[status.value])
         self.mainCanvas.create_text(GetTitleBoxRect(status).center, TASK_GROUPS[status.value], TEXT_COLOR, BOLD_FONT)
-        self.CreateAddButton()
+        self.CreateAddButton(status)
+        canvas.bind('<Button-1>', lambda e: self.SelectTask(e, status))
+        canvas.bind('<B1-Motion>', self.MoveTask)
 
-    def CreateAddButton(self):
+    def CreateAddButton(self, status: Status):
 
-        self.addButtons.append(CustomButton(self.mainCanvas, Rect(), self.OpenAddWindow, None, self.addImage))
+        self.addButtons[status.value] = CustomButton(self.groups[status.value], ADD_BUTTON_RECT, self.OpenAddWindow, None, self.addImage)
 
     def SetKeyBindings(self):
 
@@ -438,8 +444,9 @@ class GUI(Tk):
         self.bind('<Up>', lambda e: self.MoveVertically(Direction.UP))
         self.bind('<Delete>', lambda e: self.RemoveTask(self.selectedTask))
         self.bind('<Double-Button-1>', self.OpenDetailWindow)
-        self.mainCanvas.bind('<B1-Motion>', self.MoveTask)
         self.bind('<ButtonRelease-1>', self.LocateTask)
+
+        self.mainCanvas.bind("<Map>", self.Unminimize)
 
     #endregion
 
@@ -491,7 +498,7 @@ class GUI(Tk):
         if not title or not color or not deadLine:
             return
 
-        self.GetGroup(status).append(Task(self.mainCanvas, GetTaskRect(), color, status, title, detail, deadLine))
+        self.GetGroup(status).append(Task(self.groups[status.value], GetTaskRect(), color, status, title, detail, deadLine))
         self.UpdateGroupsPosition()
 
     def UpdateTask(self, task: Task, title: str, detail: str, color: str, deadLine: str, status: Status = None):
@@ -525,17 +532,17 @@ class GUI(Tk):
         self.GetGroup(task.status).remove(task)
         self.UpdateGroupsPosition()
 
-    def GetCollidedTask(self, x: int, y: int):
+    def GetCollidedTask(self, status, x: int, y: int):
 
         for task in sum(self.tasks, []):
-            if task.isCollide(x, y):
+            if task.isCollide(x, y) and task.status is status:
                 return task
         return None
 
-    def SelectTask(self, event: Event):
+    def SelectTask(self, event: Event, status: Status):
 
-        collidedTask = self.GetCollidedTask(event.x, event.y)
-
+        collidedTask = self.GetCollidedTask(status, event.x, event.y)
+        
         if self.selectedTask:
             self.selectedTask.Unselect()
         
@@ -646,6 +653,19 @@ class GUI(Tk):
             self.UpdateTasksPosition(status)
             self.UpdateAddButtonPosition(status)
 
+            groupRect = GetGroupRect(status)
+            isThereEnoughSpace = self.addButtons[status.value].rect.bottom + PADDING < groupRect.bottom
+        
+            if not isThereEnoughSpace:
+                # Add a scrollbar
+                self.scrollbars[status.value] = ttk.Scrollbar(self.mainCanvas, orient='vertical', command=self.groups[status.value].yview)
+                self.scrollbars[status.value].place(x=groupRect.right - PADDING, y=groupRect.top, height=groupRect.height)
+
+            elif self.scrollbars[status.value]:
+                    
+                    self.scrollbars[status.value].place_forget()
+                    self.scrollbars.pop(status.value)
+
     def UpdateTasksPosition(self, status: Status):
 
         if status is None:
@@ -658,23 +678,15 @@ class GUI(Tk):
         
         for i, task in enumerate(group):
             
-            position = GetGroupRect(task.status).left + PADDING, group[i - 1].rect.bottom + PADDING if i else GetTitleBoxRect(task.status).bottom + PADDING
+            position = GetNextTaskPosition(status, group, i)
             task.MoveTo(*position)
 
     def UpdateAddButtonPosition(self, status: Status):
 
         addButton = self.GetAddButton(status)
         group = self.GetGroup(status)        
-        groupRect = GetGroupRect(status)
-        upperRect = GetTitleBoxRect(status) if not group else group[-1].rect
-        
-        isThereEnoughSpace = upperRect.bottom + PADDING * 2 + MIN_TASK_HEIGHT < groupRect.bottom
-        
-        if not isThereEnoughSpace:
-            addButton.place_forget()
-            return
-
-        addButton.place(GetAddButtonRect(upperRect))
+        rect = Rect(*GetNextTaskPosition(status, group, len(group)), *GetTaskRect().size)
+        addButton.place(rect.center)
     
     #endregion
 

@@ -22,7 +22,6 @@ class Rect():
         self.x += x
         self.y += y
 
-
     #region Properties
 
     @property
