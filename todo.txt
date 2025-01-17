@@ -18,7 +18,7 @@ FEATURES
 - Tasks can have a "Title" and "Description" added.                       (+)
 - Tasks can have three statuses: Open, In Progress, Done                  (+)
 - Tasks can be selected to view details.                                  (+)
-- Title or description can be updated on the detail screen.               (-)
+- Title or description can be updated on the detail screen.               (+)
 - Tasks can be searched by title.                                         (-)
 - Tasks can be filtered by status (e.g., show only "Done" tasks).         (-)
 - The list is saved to a file in JSON format.                             (+)

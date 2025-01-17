@@ -47,3 +47,19 @@ class Task:
     def Move(self, dx: int, dy: int):
 
         return self.MoveTo(self.rect.x + dx, self.rect.y + dy)
+    
+    def UpdateTitle(self, title: str):
+
+        self.title = title
+        self.canvas.itemconfig(self.titleId, text=title)
+
+    def UpdateColor(self, color: str):
+
+        self.color = color
+        self.canvas.itemconfig(self.id, fill=color)
+
+    def Delete(self):
+
+        self.canvas.delete(self.id)
+        self.canvas.delete(self.titleId)
+        

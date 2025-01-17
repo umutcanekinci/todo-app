@@ -36,14 +36,14 @@ class GUI(Tk):
         self.ChangeTheme(THEME)
 
     @staticmethod
-    def SetWindowSettings(window: Toplevel | Misc, rect: Rect, title: str, color: str) -> None:
+    def SetWindowSettings(window: Toplevel | Misc, rect: Rect, title: str, color: str, topWindow: Misc | Toplevel = None) -> None:
 
         GUI.Centerize(window, rect)
         GUI.SetBackgroundColor(window, color)
         GUI.SetTitle(window, title)
         GUI.SetUnresizable(window)
         GUI.RemoveTitleBar(window)
-        window.bind('<Escape>', lambda e: GUI.CloseWindow(window))
+        window.bind('<Escape>', lambda e: GUI.CloseWindow(window, topWindow))
 
     @staticmethod
     def SetUnresizable(window, width: bool = False, height: bool = False) -> None:
@@ -85,12 +85,15 @@ class GUI(Tk):
         window.focus_set()
 
     @staticmethod
-    def CloseWindow(window: Toplevel | Misc | None) -> None:
+    def CloseWindow(window: Toplevel | Misc | None, topWindow: Toplevel | Misc) -> None:
 
         if not window.winfo_exists():
             return
 
         window.destroy()
+
+        if topWindow and topWindow.winfo_exists():
+            GUI.FocusWindow(topWindow)
         
     @staticmethod
     def GetWindowPosition(event, window: Toplevel | Misc, rect: Rect, titleBar: CustomCanvas) -> None:
@@ -184,7 +187,7 @@ class GUI(Tk):
 
         return THEMES[self.themeVar.get()][index]
 
-    def OpenWindow(self, index: int, rect: Rect, title: str, height: int, textColor: str, font: tuple):
+    def OpenWindow(self, index: int, rect: Rect, title: str, height: int, textColor: str, font: tuple, topWindow: Toplevel | Misc = None) -> Toplevel:
 
         backgroundColor = self.GetColor(0)
         themeColor = self.GetColor(2)
@@ -194,7 +197,7 @@ class GUI(Tk):
             return
 
         window = self.windows[index] = Toplevel(self)
-        self.SetWindowSettings(window, rect, title, backgroundColor)
+        self.SetWindowSettings(window, rect, title, backgroundColor, topWindow)
         self.CreateTitleBar(window, height, title, themeColor, textColor, font)
         self.LockWindow(window)
         self.FocusWindow(window)
@@ -206,7 +209,7 @@ class GUI(Tk):
 
     def OpenInfoWindow(self):
         
-        window = self.OpenWindow(0, WINDOW_RECTS["info"], TITLES[1], TITLEBAR_HEIGHT, TEXT_COLOR, TITLE_FONT)
+        window = self.OpenWindow(0, WINDOW_RECTS["info"], TITLES[1], TITLEBAR_HEIGHT, TEXT_COLOR, TITLE_FONT, self)
         
         if window is None:
             return
@@ -215,7 +218,7 @@ class GUI(Tk):
         themeColor = self.GetColor(2)
 
         Label(window, text="Arrow keys: move the selected task\nEnter: Add a task\nDel: Remove the selected task.\n\nMade by Umutcan Ekinci\ngithub.com/umutcanekinci", font=TEXT_FONT, justify='center', bg=backgroundColor, fg=TEXT_COLOR).pack(pady=(50, 0))
-        Button(window, text="Close", font=FONT, bg=themeColor, fg=TEXT_COLOR, command=lambda: self.CloseWindow(window)).pack(pady=PADDING, side=BOTTOM)
+        Button(window, text="Close", font=FONT, bg=themeColor, fg=TEXT_COLOR, command=lambda: self.CloseWindow(window, self)).pack(pady=PADDING, side=BOTTOM)
 
     def OpenDetailWindow(self, e):
 
@@ -227,7 +230,7 @@ class GUI(Tk):
         if not task:
             return
 
-        window = self.OpenWindow(1, WINDOW_RECTS["detail"], TITLES[2], TITLEBAR_HEIGHT, TEXT_COLOR, TITLE_FONT)
+        window = self.OpenWindow(1, WINDOW_RECTS["detail"], TITLES[2], TITLEBAR_HEIGHT, TEXT_COLOR, TITLE_FONT, self)
         
         if window is None:
             return
@@ -251,12 +254,12 @@ class GUI(Tk):
         ButtonFrame = Frame(window, bg=task.color)
         ButtonFrame.pack(pady=PADDING * 2, side=BOTTOM)
 
-        Button(ButtonFrame, text="Close", font=FONT, bg=themeColor, fg=TEXT_COLOR, command= lambda: self.CloseWindow(window)).pack(side=LEFT, padx=PADDING)
+        Button(ButtonFrame, text="Close", font=FONT, bg=themeColor, fg=TEXT_COLOR, command= lambda: self.CloseWindow(window, self)).pack(side=LEFT, padx=PADDING)
         Button(ButtonFrame, text="Edit", font=FONT, bg=themeColor, fg=TEXT_COLOR, command= self.OpenEditWindow).pack(side=LEFT, padx=PADDING)
         
     def OpenAddWindow(self):
 
-        window = self.OpenWindow(2, WINDOW_RECTS["add"], TITLES[3], TITLEBAR_HEIGHT, TEXT_COLOR, TITLE_FONT)
+        window = self.OpenWindow(2, WINDOW_RECTS["add"], TITLES[3], TITLEBAR_HEIGHT, TEXT_COLOR, TITLE_FONT, self)
         
         if window is None:
             return
@@ -291,7 +294,7 @@ class GUI(Tk):
         ButtonFrame = Frame(window, bg=backgroundColor)
         ButtonFrame.pack(pady=PADDING * 2, side=BOTTOM)
 
-        Button(ButtonFrame, text="Close", font=FONT, bg=themeColor, fg=TEXT_COLOR, command=lambda: self.CloseWindow(window)).pack(side=LEFT, padx=PADDING)
+        Button(ButtonFrame, text="Close", font=FONT, bg=themeColor, fg=TEXT_COLOR, command=lambda: self.CloseWindow(window, self)).pack(side=LEFT, padx=PADDING)
         Button(ButtonFrame, text="Add", font=FONT, bg=themeColor, fg=TEXT_COLOR, command=self.CheckAddWindow).pack(side='right', padx=PADDING)
 
     def CheckAddWindow(self):
@@ -306,17 +309,65 @@ class GUI(Tk):
 
     def OpenEditWindow(self):
 
-        window = self.OpenWindow(2, WINDOW_RECTS["edit"], TITLES[4], TITLEBAR_HEIGHT, TEXT_COLOR, TITLE_FONT)
-        
+        window = self.OpenWindow(2, WINDOW_RECTS["edit"], TITLES[4], TITLEBAR_HEIGHT, TEXT_COLOR, TITLE_FONT, self)
+        self.CloseWindow(self.windows[1], self)
+        self.colorchooserValue = self.selectedTask.color
+
         if not window:
             return
+        
+        backgroundColor = self.selectedTask.color
+        themeColor = self.GetColor(2)
 
+        canvas = CustomCanvas(window, backgroundColor, GetMainCanvasRect(TITLEBAR_HEIGHT, WINDOW_RECTS["add"]))
+
+        canvas.create_text((PADDING, TITLEBAR_HEIGHT + PADDING), "Enter the task title:", TEXT_COLOR, FONT, 'w')
+        self.titleText = Text(window, font=TEXT_FONT, bg=themeColor, fg=TEXT_COLOR, height=1)
+        self.titleText.pack(pady=(TITLEBAR_HEIGHT + PADDING * 6, 0), padx=PADDING, side=TOP)
+        self.titleText.insert("1.0", self.selectedTask.title)
+
+        canvas.create_text((PADDING, TITLEBAR_HEIGHT + PADDING * 10), "Enter the detail:", TEXT_COLOR, FONT, 'w')
+        self.detailText = Text(window, font=TEXT_FONT, bg=themeColor, fg=TEXT_COLOR, height=3)
+        self.detailText.pack(pady=(PADDING * 6, 0), padx=PADDING, side=TOP)
+        self.detailText.insert("1.0", self.selectedTask.detail)
+
+        self.statusVar = StringVar(window, TASK_GROUPS[self.selectedTask.status.value].capitalize())
+        canvas.create_text((PADDING, TITLEBAR_HEIGHT + PADDING * 24), "Select the status:", TEXT_COLOR, FONT, 'w')
+        statusOption = OptionMenu(window, self.statusVar, "Open", "In Progress", "Done")
+        statusOption.pack(anchor='nw', pady=PADDING * 3, padx=(PADDING * 22, 0), side=TOP)
+        statusOption.config(bg=themeColor, fg=TEXT_COLOR, activeforeground=TEXT_COLOR, activebackground=themeColor, highlightbackground=themeColor, font=FONT)
+
+        canvas.create_text((PADDING, TITLEBAR_HEIGHT + PADDING * 31), "Choose the color:", TEXT_COLOR, FONT, 'w')
+        Button(window, text="Choose", font=FONT, bg=themeColor, fg=TEXT_COLOR, command=self.ChooseColor).pack(anchor='nw', padx=(PADDING * 21, 0), pady=0 , side=TOP)
+
+        canvas.create_text((PADDING, TITLEBAR_HEIGHT + PADDING * 39), "Select the deadline:", TEXT_COLOR, FONT, 'w')
+        self.deadLineEntry = DateEntry(window, font=TEXT_FONT, firstweekday='monday', selectbackground=themeColor)
+        self.deadLineEntry.pack(anchor='nw', padx=(PADDING * 24, 0), pady=PADDING * 3, side=TOP)
+        self.deadLineEntry.set_date(self.selectedTask.deadLine)
+        
+        ButtonFrame = Frame(window, bg=backgroundColor)
+        ButtonFrame.pack(pady=PADDING * 2, side=BOTTOM)
+
+        Button(ButtonFrame, text="Cancel", font=FONT, bg=themeColor, fg=TEXT_COLOR, command=lambda: self.CloseWindow(window, self)).pack(side=LEFT, padx=PADDING)
+        Button(ButtonFrame, text="Apply", font=FONT, bg=themeColor, fg=TEXT_COLOR, command=self.CheckEditWindow).pack(side='right', padx=PADDING)
+
+    def CheckEditWindow(self):
+
+        title = self.titleText.get("1.0", "end-1c")
+
+        if not title:
+            return
+        
+        status = Status[self.statusVar.get().upper().replace(' ', '_')]
+        self.UpdateTask(self.selectedTask, title, self.detailText.get("1.0", "end-1c"), self.colorchooserValue if self.colorchooserValue else self.GetColor(0), self.deadLineEntry.get(), status)
+        self.UpdateGroupsPosition()
+        self.CloseWindow(self.windows[2], self)
 
     #endregion
 
     def ChooseColor(self):
 
-        self.colorchooserValue = colorchooser.askcolor(title ="Choose task color")[1]
+        self.colorchooserValue = colorchooser.askcolor(initialcolor=self.colorchooserValue, title ="Choose task color")[1]
 
     #region Create Widgets
 
@@ -443,14 +494,27 @@ class GUI(Tk):
         self.GetGroup(status).append(Task(self.mainCanvas, GetTaskRect(), color, status, title, detail, deadLine))
         self.UpdateGroupsPosition()
 
+    def UpdateTask(self, task: Task, title: str, detail: str, color: str, deadLine: str, status: Status = None):
+
+        if task is None:
+            raise ValueError("Task is None")
+
+        if not title or not color or not deadLine:
+            return
+
+        task.color, task.deadLine, task.detail = color, deadLine, detail
+
+        task.UpdateTitle(title)
+        task.UpdateColor(color)
+        self.SetTaskStatus(task, status)
+
     def RemoveTask(self, task: Task):
         
         if task is None:
             raise ValueError("Task is None")
 
         self.RemoveTaskFromList(task)
-        self.mainCanvas.delete(task.id)
-        self.mainCanvas.delete(task.titleId)
+        task.Delete()
         self.selectedTask = None
 
     def RemoveTaskFromList(self, task: Task):
@@ -497,9 +561,7 @@ class GUI(Tk):
         if not (canMoveRight or canMoveLeft):
             return
         
-        self.RemoveTaskFromList(self.selectedTask)
-        self.selectedTask.status = Status(self.selectedTask.status.value + direction.value) 
-        self.GetGroup(self.selectedTask.status).append(self.selectedTask)
+        self.SetTaskStatus(self.selectedTask, Status(self.selectedTask.status.value + direction.value) )
         self.UpdateGroupsPosition()
 
     def MoveVertically(self, direction : Direction):
@@ -518,6 +580,12 @@ class GUI(Tk):
         
         tasks[index], tasks[index + direction.value] = tasks[index + direction.value], tasks[index]
         self.UpdateGroupsPosition()
+
+    def SetTaskStatus(self, task: Task, newStatus: Status):
+
+        self.RemoveTaskFromList(task)
+        task.status = newStatus
+        self.GetGroup(task.status).append(task)
 
     def LocateTask(self, event: Event):
 
