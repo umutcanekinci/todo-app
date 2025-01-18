@@ -26,7 +26,6 @@ class GUI(Tk):
         self.scrollbars = [None for _ in Status]
         self.addButtons = [None for _ in Status]
         
-
         self.selectedTask = None
         self.colorchooserValue = None
         self.isTaskMoving = False
@@ -35,6 +34,7 @@ class GUI(Tk):
         self.themeElements = [[], [], [], []] # items in each list will have same color
 
         self.SetWindowSettings(self, rect, TITLES[0], None)
+        self.SetStyle()
         self.CreateWidgets()
         self.LoadTasks()
         self.ChangeTheme(THEME)
@@ -121,6 +121,11 @@ class GUI(Tk):
         window.update_idletasks() # https://stackoverflow.com/questions/34373533/winfo-width-returns-1-even-after-using-pack
         return Rect(window.winfo_x(), window.winfo_y(), window.winfo_width(), window.winfo_height())
 
+    def SetStyle(self) -> None:
+
+        self.style = ttk.Style()
+        self.style.theme_use('clam')
+
     def CreateTitleBar(self, window: Toplevel | Misc, height: int, title: str, color: str, titleColor: str, titleFont: tuple) -> CustomCanvas:
 
         windowRect = GUI.GetWindowRect(window)
@@ -174,6 +179,7 @@ class GUI(Tk):
         for row in rows:
             status, title, detail, color, deadLine = row[1:]
             self.AddNewTask(Status[status], title, detail, color, deadLine)
+        self.UpdateGroupsPosition()
 
     def SaveTasks(self) -> None:
         
@@ -225,13 +231,8 @@ class GUI(Tk):
         Button(window, text="Close", font=FONT, bg=themeColor, fg=TEXT_COLOR, command=lambda: self.CloseWindow(window, self)).pack(pady=PADDING, side=BOTTOM)
 
     def OpenDetailWindow(self, e):
-
-        if not self.selectedTask:
-            return
         
-        task = self.GetCollidedTask(e.x, e.y)
-
-        if not task:
+        if not self.selectedTask:
             return
 
         window = self.OpenWindow(1, WINDOW_RECTS["detail"], TITLES[2], TITLEBAR_HEIGHT, TEXT_COLOR, TITLE_FONT, self)
@@ -240,22 +241,22 @@ class GUI(Tk):
             return
         
         themeColor = self.GetColor(2)
-        canvas = CustomCanvas(window, task.color, GetMainCanvasRect(TITLEBAR_HEIGHT, WINDOW_RECTS["detail"]))
+        canvas = CustomCanvas(window, self.selectedTask.color, GetMainCanvasRect(TITLEBAR_HEIGHT, WINDOW_RECTS["detail"]))
 
         canvas.create_text((PADDING, PADDING * 1 + TITLEBAR_HEIGHT), "TITLE", TEXT_COLOR, BOLD_FONT, 'w')
-        canvas.create_text((PADDING, PADDING * 4 + TITLEBAR_HEIGHT), task.title, TEXT_COLOR, TEXT_FONT, 'w')
+        canvas.create_text((PADDING, PADDING * 4 + TITLEBAR_HEIGHT), self.selectedTask.title, TEXT_COLOR, TEXT_FONT, 'w')
 
         canvas.create_text((PADDING, PADDING * 9 + TITLEBAR_HEIGHT), "DETAIL", TEXT_COLOR, BOLD_FONT, 'w')
-        canvas.create_text((PADDING, PADDING * 12 + TITLEBAR_HEIGHT), task.detail, TEXT_COLOR, TEXT_FONT, 'w')
+        canvas.create_text((PADDING, PADDING * 12 + TITLEBAR_HEIGHT), self.selectedTask.detail, TEXT_COLOR, TEXT_FONT, 'w')
         
         canvas.create_text((PADDING, PADDING * 22 + TITLEBAR_HEIGHT), "STATUS", TEXT_COLOR, BOLD_FONT, 'w')
-        canvas.create_text((PADDING, PADDING * 25 + TITLEBAR_HEIGHT), task.status.name.replace('_', ' ').title(), TEXT_COLOR, TEXT_FONT, 'w')
+        canvas.create_text((PADDING, PADDING * 25 + TITLEBAR_HEIGHT), self.selectedTask.status.name.replace('_', ' ').title(), TEXT_COLOR, TEXT_FONT, 'w')
 
         canvas.create_text((PADDING, PADDING * 30 + TITLEBAR_HEIGHT), "DEADLINE", TEXT_COLOR, BOLD_FONT, 'w')
-        canvas.create_text((PADDING, PADDING * 33 + TITLEBAR_HEIGHT), task.deadLine, TEXT_COLOR, TEXT_FONT, 'w')
+        canvas.create_text((PADDING, PADDING * 33 + TITLEBAR_HEIGHT), self.selectedTask.deadLine, TEXT_COLOR, TEXT_FONT, 'w')
 
         # Buttons
-        ButtonFrame = Frame(window, bg=task.color)
+        ButtonFrame = Frame(window, bg=self.selectedTask.color)
         ButtonFrame.pack(pady=PADDING * 2, side=BOTTOM)
 
         Button(ButtonFrame, text="Close", font=FONT, bg=themeColor, fg=TEXT_COLOR, command= lambda: self.CloseWindow(window, self)).pack(side=LEFT, padx=PADDING)
@@ -310,6 +311,7 @@ class GUI(Tk):
         
         status = Status[self.statusVar.get().upper().replace(' ', '_')]
         self.AddNewTask(status, title, self.detailText.get("1.0", "end-1c"), self.colorchooserValue if self.colorchooserValue else self.GetColor(0), self.deadLineEntry.get())
+        self.UpdateGroupsPosition()
 
     def OpenEditWindow(self):
 
@@ -423,7 +425,7 @@ class GUI(Tk):
     
     def CreateGroup(self, status: Status):
 
-        canvas = CustomCanvas(self.mainCanvas, 'white', GetGroupRect(status))
+        canvas = CustomCanvas(self.mainCanvas, None, GetGroupRect(status))
         self.groups[status.value] = canvas
         self.themeElements[1].append(canvas)
         self.mainCanvas.create_rectangle(GetTitleBoxRect(status), TEXTBOX_COLORS[status.value])
@@ -431,6 +433,16 @@ class GUI(Tk):
         self.CreateAddButton(status)
         canvas.bind('<Button-1>', lambda e: self.SelectTask(e, status))
         canvas.bind('<B1-Motion>', self.MoveTask)
+        #canvas.bind('<MouseWheel>', lambda e: self.MousewheelScroll(e, canvas, status))
+
+    def MousewheelScroll(self, e, canvas, status: Status):
+        
+        canMoveDown = e.delta > 0 and canvas.canvasy(0) > 0
+        canMoveUp = e.delta < 0 and 0 < self.GetAddButton(status).rect.bottom + PADDING - canvas.winfo_height()
+        if not (canMoveDown or canMoveUp):
+            return
+        
+        canvas.yview_scroll(-1 * int(e.delta/120), "units") if self.scrollbars[status.value] else None
 
     def CreateAddButton(self, status: Status):
 
@@ -443,7 +455,7 @@ class GUI(Tk):
         self.bind('<Down>', lambda e: self.MoveVertically(Direction.DOWN))
         self.bind('<Up>', lambda e: self.MoveVertically(Direction.UP))
         self.bind('<Delete>', lambda e: self.RemoveTask(self.selectedTask))
-        self.bind('<Double-Button-1>', self.OpenDetailWindow)
+        self.mainCanvas.bind_all('<Double-Button-1>', self.OpenDetailWindow)
         self.bind('<ButtonRelease-1>', self.LocateTask)
 
         self.mainCanvas.bind("<Map>", self.Unminimize)
@@ -467,7 +479,8 @@ class GUI(Tk):
     def ChangeTheme(self, value):
         
         theme = THEMES[self.themeVar.get()]
-
+        self.style.configure("Vertical.TScrollbar", troughcolor=self.GetColor(0), background=self.GetColor(1), bordercolor=self.GetColor(2))
+        
         for i, element in enumerate(self.themeElements):
             for item in element:
 
@@ -499,8 +512,7 @@ class GUI(Tk):
             return
 
         self.GetGroup(status).append(Task(self.groups[status.value], GetTaskRect(), color, status, title, detail, deadLine))
-        self.UpdateGroupsPosition()
-
+        
     def UpdateTask(self, task: Task, title: str, detail: str, color: str, deadLine: str, status: Status = None):
 
         if task is None:
@@ -532,13 +544,31 @@ class GUI(Tk):
         self.GetGroup(task.status).remove(task)
         self.UpdateGroupsPosition()
 
-    def GetCollidedTask(self, status, x: int, y: int):
+    def HandleScrollbar(self, status, x0, x1):
 
+        if not self.scrollbars[status.value]:
+            return
+        
+        self.scrollbars[status.value].set(x0, x1)
+        self.UpdateAddButtonPosition(status)
+
+    def GetCollidedTask(self, status, x: int, y: int):
+        
+        # Actually I didn't use that ref but I will keep it here for future reference
+        #ref: https://stackoverflow.com/questions/38982313/python-tkinter-identify-object-on-click
+        
+        if status is None:
+            raise ValueError("Status is None")
+        
+        if x is None or y is None:
+            raise ValueError("X or Y is None")
+
+        x, y = self.groups[status.value].canvasx(x), self.groups[status.value].canvasy(y)
         for task in sum(self.tasks, []):
             if task.isCollide(x, y) and task.status is status:
                 return task
         return None
-
+    
     def SelectTask(self, event: Event, status: Status):
 
         collidedTask = self.GetCollidedTask(status, event.x, event.y)
@@ -546,15 +576,14 @@ class GUI(Tk):
         if self.selectedTask:
             self.selectedTask.Unselect()
         
-        if self.selectedTask is collidedTask:
-            self.selectedTask = None
+        if self.selectedTask and self.selectedTask is collidedTask:
+            self.selectedTask.Select(self.GetColor(3))
             return
         
         if collidedTask:
             collidedTask.Select(self.GetColor(3))
             
         self.selectedTask = collidedTask
-
         self.mainCanvas.startPos = Rect(event.x, event.y)
 
     def MoveHorizontally(self, direction: Direction):
@@ -590,9 +619,10 @@ class GUI(Tk):
 
     def SetTaskStatus(self, task: Task, newStatus: Status):
 
-        self.RemoveTaskFromList(task)
-        task.status = newStatus
-        self.GetGroup(task.status).append(task)
+        self.AddNewTask(newStatus, task.title, task.detail, task.color, task.deadLine)
+        self.RemoveTask(task)
+        self.selectedTask = self.GetGroup(newStatus)[-1]
+        self.selectedTask.Select(self.GetColor(3))
 
     def LocateTask(self, event: Event):
 
@@ -650,24 +680,47 @@ class GUI(Tk):
     def UpdateGroupsPosition(self):
 
         for status in Status:
+            
             self.UpdateTasksPosition(status)
             self.UpdateAddButtonPosition(status)
 
             groupRect = GetGroupRect(status)
-            isThereEnoughSpace = self.addButtons[status.value].rect.bottom + PADDING < groupRect.bottom
+            
+            isThereEnoughSpace = self.addButtons[status.value].rect.bottom + PADDING * 4 < groupRect.bottom
         
             if not isThereEnoughSpace:
-                # Add a scrollbar
-                self.scrollbars[status.value] = ttk.Scrollbar(self.mainCanvas, orient='vertical', command=self.groups[status.value].yview)
-                self.scrollbars[status.value].place(x=groupRect.right - PADDING, y=groupRect.top, height=groupRect.height)
+                self.CreateScrollBar(status)
+                continue
+            
+            
+            
+            self.DeleteScrollBar(status)
 
-            elif self.scrollbars[status.value]:
-                    
-                    self.scrollbars[status.value].place_forget()
-                    self.scrollbars.pop(status.value)
+    def CreateScrollBar(self, status: Status):
+
+        if not status:
+            raise ValueError("Status is None")
+        
+        if self.scrollbars[status.value]:
+            return
+    
+        groupRect = GetGroupRect(status)
+        canvas = self.groups[status.value]
+        
+        self.scrollbars[status.value] = ttk.Scrollbar(self.mainCanvas, orient='vertical', command=canvas.yview)
+        self.scrollbars[status.value].place(x=groupRect.right - PADDING, y=groupRect.top, height=groupRect.height)
+        canvas.config(yscrollcommand= lambda x0, x1: self.HandleScrollbar(status, x0, x1))
+
+    def DeleteScrollBar(self, status: Status):
+
+        if not self.scrollbars[status.value]:
+            return
+        
+        self.scrollbars[status.value].place_forget()
+        self.scrollbars[status.value] = None
 
     def UpdateTasksPosition(self, status: Status):
-
+        
         if status is None:
             raise ValueError("Status is None")
 
@@ -684,8 +737,14 @@ class GUI(Tk):
     def UpdateAddButtonPosition(self, status: Status):
 
         addButton = self.GetAddButton(status)
-        group = self.GetGroup(status)        
-        rect = Rect(*GetNextTaskPosition(status, group, len(group)), *GetTaskRect().size)
+        group = self.GetGroup(status)       
+
+        x, y = GetNextTaskPosition(status, group, len(group))
+        
+        if self.scrollbars[status.value]: # Update y position with movement of scrollbar
+            y -= self.groups[status.value].canvasy(0) 
+
+        rect = Rect(x, y, *GetTaskRect().size)
         addButton.place(rect.center)
     
     #endregion

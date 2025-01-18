@@ -7,9 +7,9 @@ BUGS
 - When pressing Alt+tab, icon is not coming to the taskbar                          (https://stackoverflow.com/questions/60442386/check-if-window-is-in-background-tkinter.9
 - It freezes when trying to delete the last element                     (FIXED)
 - There is no limitation to add elements                                (FIXED)
-- There is no scrollbar or something like it
-- Sometimes TopLevel windows are not oppening
-- Sometimes selecting tasks by clicking is not working
+- There is no scrollbar or something like it                            (WORKING ON)
+- Sometimes TopLevel windows are not oppening                           (FIXED)
+- Sometimes selecting tasks by clicking is not working                  (FIXED)
 - We wasn't able to add tasks to In Progress group.                     (FIXED)
 
 
