@@ -433,7 +433,8 @@ class GUI(Tk):
         self.CreateAddButton(status)
         canvas.bind('<Button-1>', lambda e: self.SelectTask(e, status))
         canvas.bind('<B1-Motion>', self.MoveTask)
-        #canvas.bind('<MouseWheel>', lambda e: self.MousewheelScroll(e, canvas, status))
+        canvas.bind('<MouseWheel>', lambda e: self.MousewheelScroll(e, canvas, status))
+        canvas.bind('<Configure>', lambda e: canvas.configure(scrollregion=(*canvas.bbox("all")[0:3], canvas.bbox("all")[3] + ADD_BUTTON_RECT.height + PADDING * 6) if canvas.bbox("all") else (0, 0, 0, 0)))
 
     def MousewheelScroll(self, e, canvas, status: Status):
         
@@ -675,6 +676,34 @@ class GUI(Tk):
         self.selectedTask.Move(*newRect.topLeft)
         self.mainCanvas.startPos = Rect(event.x, event.y)
 
+
+    def CreateScrollBar(self, status: Status):
+
+        if not status:
+            raise ValueError("Status is None")
+        
+        if self.scrollbars[status.value]:
+            return
+    
+        groupRect = GetGroupRect(status)
+        canvas = self.groups[status.value]
+        
+        self.scrollbars[status.value] = ttk.Scrollbar(self.mainCanvas, orient='vertical', command=canvas.yview)
+        self.scrollbars[status.value].place(x=groupRect.right - PADDING, y=groupRect.top, height=groupRect.height)
+        canvas.config(yscrollcommand= lambda x0, x1: self.HandleScrollbar(status, x0, x1))
+
+
+        
+
+    def DeleteScrollBar(self, status: Status):
+
+        if not self.scrollbars[status.value]:
+            return
+        
+        self.scrollbars[status.value].place_forget()
+        self.scrollbars[status.value] = None
+
+
     #region Update Position Methods
 
     def UpdateGroupsPosition(self):
@@ -692,32 +721,7 @@ class GUI(Tk):
                 self.CreateScrollBar(status)
                 continue
             
-            
-            
             self.DeleteScrollBar(status)
-
-    def CreateScrollBar(self, status: Status):
-
-        if not status:
-            raise ValueError("Status is None")
-        
-        if self.scrollbars[status.value]:
-            return
-    
-        groupRect = GetGroupRect(status)
-        canvas = self.groups[status.value]
-        
-        self.scrollbars[status.value] = ttk.Scrollbar(self.mainCanvas, orient='vertical', command=canvas.yview)
-        self.scrollbars[status.value].place(x=groupRect.right - PADDING, y=groupRect.top, height=groupRect.height)
-        canvas.config(yscrollcommand= lambda x0, x1: self.HandleScrollbar(status, x0, x1))
-
-    def DeleteScrollBar(self, status: Status):
-
-        if not self.scrollbars[status.value]:
-            return
-        
-        self.scrollbars[status.value].place_forget()
-        self.scrollbars[status.value] = None
 
     def UpdateTasksPosition(self, status: Status):
         
