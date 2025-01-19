@@ -176,7 +176,7 @@ class GUI(Tk):
 
         for row in rows:
             status, title, detail, color, deadLine = row[1:]
-            self.AddNewTask(Status[status], title, detail, color, deadLine)
+            self.AddNewTask(self.GetGroup(Status[status]), title, detail, color, deadLine)
         self.UpdateGroupsPosition()
 
     def SaveTasks(self) -> None:
@@ -270,7 +270,7 @@ class GUI(Tk):
                 return
             
             status = Status[self.statusVar.get().upper().replace(' ', '_')]
-            self.AddNewTask(status, title, self.detailText.get("1.0", "end-1c"), self.colorchooserValue if self.colorchooserValue else self.GetColor(0), self.deadLineEntry.get())
+            self.AddNewTask(self.GetGroup(status), title, self.detailText.get("1.0", "end-1c"), self.colorchooserValue if self.colorchooserValue else self.GetColor(0), self.deadLineEntry.get())
             self.UpdateGroupsPosition()
 
         window = self.OpenWindow(2, WINDOW_RECTS["add"], TITLES[3], TITLEBAR_HEIGHT, TEXT_COLOR, TITLE_FONT, self)
@@ -437,9 +437,9 @@ class GUI(Tk):
         def SetBindings() -> None:
 
             #canvas.bind('<B1-Motion>' , self.MoveTask)
-            canvas.bind('<Button-1>'  , lambda e: self.SelectTask(e, status))
-            canvas.bind('<MouseWheel>', lambda e: self.MousewheelScroll(e, canvas, status))
-            canvas.bind('<Configure>' , lambda e: self.ResizeGroup(group))
+            canvas.bind('<Button-1>'  , lambda e: self.SelectTask(e, group))
+            canvas.bind('<MouseWheel>', lambda e: self.MousewheelScroll(e, canvas, group))
+            canvas.bind('<Configure>' , lambda e: group.Resize())
 
         group = Group(self.mainCanvas, status)
         canvas = group.canvas
@@ -450,25 +450,14 @@ class GUI(Tk):
         
         SetBindings()
         
-    def ResizeGroup(self, group):
-        
-        canvas = group.canvas
-        region = canvas.bbox("all")
-        
-        if not region:
-            return
-        
-        region = 0, 0, region[2], region[3] + ADD_BUTTON_RECT.height + PADDING * 6 
-        canvas.configure(scrollregion=region)
-        
-    def MousewheelScroll(self, e, canvas, status: Status):
+    def MousewheelScroll(self, e, canvas, group: Group):
         
         canMoveDown = e.delta > 0 and canvas.canvasy(0) > 0
-        canMoveUp = e.delta < 0 and 0 < self.GetGroup(status).addButton.rect.bottom + PADDING - canvas.winfo_height()
+        canMoveUp = e.delta < 0 and 0 < group.addButton.rect.bottom + PADDING - canvas.winfo_height()
         if not (canMoveDown or canMoveUp):
             return
         
-        canvas.yview_scroll(-1 * int(e.delta/120), "units") if self.groups[status.value].scrollBar else None
+        canvas.yview_scroll(-1 * int(e.delta/120), "units") if group.scrollBar else None
 
     def SetKeyBindings(self):
 
@@ -518,15 +507,15 @@ class GUI(Tk):
 
     #region Task Methods
 
-    def AddNewTask(self, status: str, title: str, detail: str, color: str, deadLine: str):
+    def AddNewTask(self, group: str, title: str, detail: str, color: str, deadLine: str):
 
-        if status is None:
+        if group is None:
             raise ValueError("Status is None")
 
         if not title or not color or not deadLine:
             return
 
-        self.GetGroup(status).tasks.append(Task(self.groups[status.value], GetTaskRect(), color, status, title, detail, deadLine))
+        group.tasks.append(Task(group, GetTaskRect(), color, group.name, title, detail, deadLine))
         
     def UpdateTask(self, task: Task, title: str, detail: str, color: str, deadLine: str, status: Status = None):
 
@@ -559,35 +548,26 @@ class GUI(Tk):
         self.GetGroup(task.status).tasks.remove(task)
         self.UpdateGroupsPosition()
 
-    def HandleScrollbar(self, status, x0, x1):
-        
-        if not self.groups[status.value].scrollBar:
-            return
-        
-        self.groups[status.value].scrollBar.set(x0, x1)
-        self.UpdateAddButtonPosition(status)
-
-    def GetCollidedTask(self, status, x: int, y: int):
+    def GetCollidedTask(self, group, x: int, y: int):
         
         # Actually I didn't use that ref but I will keep it here for future reference
         #ref: https://stackoverflow.com/questions/38982313/python-tkinter-identify-object-on-click
         
-        if status is None:
+        if group is None:
             raise ValueError("Status is None")
         
         if x is None or y is None:
             raise ValueError("X or Y is None")
 
-        group = self.GetGroup(status)
         x, y = group.canvas.canvasx(x), group.canvas.canvasy(y)
         for task in group.tasks:
             if task.isCollide(x, y):
                 return task
         return None
     
-    def SelectTask(self, event: Event, status: Status):
+    def SelectTask(self, event: Event, group: Status):
 
-        collidedTask = self.GetCollidedTask(status, event.x, event.y)
+        collidedTask = self.GetCollidedTask(group, event.x, event.y)
         
         if self.selectedTask:
             self.selectedTask.Unselect()
@@ -623,7 +603,7 @@ class GUI(Tk):
         if not self.selectedTask or not direction:
             return
 
-        tasks = self.GetGroup(self.selectedTask.status)
+        tasks = self.GetGroup(self.selectedTask.status).tasks
         index = tasks.index(self.selectedTask)
 
         canMoveDown = direction == Direction.DOWN and index != len(tasks) - 1
@@ -638,7 +618,7 @@ class GUI(Tk):
 
     def SetTaskGroup(self, task: Task, newStatus: Status):
 
-        self.AddNewTask(newStatus, task.title, task.detail, task.color, task.deadLine)
+        self.AddNewTask(self.GetGroup(newStatus), task.title, task.detail, task.color, task.deadLine)
         self.RemoveTask(task)
         self.selectedTask = self.GetGroup(newStatus).tasks[-1]
         self.selectedTask.Select(self.GetColor(3))
@@ -655,20 +635,19 @@ class GUI(Tk):
         self.selectedTask.Unselect()
 
         # Get nearest group and locate the task in that group
-        for status in Status:
-            if isPointInRectangle(GetGroupRect(status), event.x, event.y):
+        for group in self.groups:
+            if isPointInRectangle(GetGroupRect(group.name), event.x, event.y):
                 
-                newGroup = self.GetGroup(status)
-
+            
                 self.RemoveTaskFromList(self.selectedTask)
-                self.selectedTask.status = status
+                self.selectedTask.status = group.name
                 
-                for task in newGroup:
+                for task in group:
                     if isPointInRectangle(task.rect, event.x, event.y):
-                        newGroup.insert(newGroup.index(task), self.selectedTask)
+                        group.insert(group.index(task), self.selectedTask)
                         break
                 else:
-                    newGroup.append(self.selectedTask)
+                    group.append(self.selectedTask)
                 
                 self.UpdateGroupsPosition()
                 break
@@ -698,74 +677,8 @@ class GUI(Tk):
 
     def UpdateGroupsPosition(self):
 
-        def CreateScrollBar(status, scrollBar):
+        for group in self.groups:
             
-            # I don't know why but when I not get status from parameter, it becomes the last status
-            if not status:
-                raise ValueError("Status is None")
-            
-            if scrollBar:
-                return
+            group.UpdatePosition()
 
-            canvas = self.groups[status.value].canvas
-            
-            self.groups[status.value].scrollBar = ttk.Scrollbar(self.mainCanvas, orient='vertical', command=canvas.yview)
-            self.groups[status.value].scrollBar.place(x=groupRect.right - PADDING, y=groupRect.top, height=groupRect.height)
-            
-            canvas.config(yscrollcommand= lambda x0, x1: self.HandleScrollbar(status, x0, x1))
-            
-        def DeleteScrollBar(status: Status, scrollBar: ttk.Scrollbar):
-
-            if not scrollBar:
-                return
-
-            scrollBar.place_forget()
-            self.groups[status.value].scrollBar = None
-
-        def UpdateTasksPosition():
-            
-            if status is None:
-                raise ValueError("Status is None")
-
-            group = self.GetGroup(status)
-            
-            if group is None:
-                raise ValueError("List is None")
-            
-            for i, task in enumerate(group.tasks):
-                
-                position = GetNextTaskPosition(status, group, i)
-                task.MoveTo(*position)
-
-        for status in Status:
-            
-            UpdateTasksPosition()
-            self.UpdateAddButtonPosition(status)
-
-            groupRect = GetGroupRect(status)
-            scrollBar = self.groups[status.value].scrollBar
-            
-            isThereEnoughSpace = self.groups[status.value].addButton.rect.bottom + PADDING * 4 < groupRect.bottom
-            self.ResizeGroup(self.groups[status.value])
-            
-            if not isThereEnoughSpace and not scrollBar:
-                CreateScrollBar(status, scrollBar)
-                continue
-            
-            DeleteScrollBar(status, scrollBar)
-
-    def UpdateAddButtonPosition(self, status: Status):
-        
-        addButton = self.GetGroup(status).addButton
-        group = self.GetGroup(status)       
-
-        x, y = GetNextTaskPosition(status, group, len(group.tasks))
-        
-        if self.groups[status.value].scrollBar: # Update y position with movement of scrollbar
-            y -= self.groups[status.value].canvas.canvasy(0) 
-
-        rect = Rect(x, y, *GetTaskRect().size)
-        addButton.place(rect.center)
-    
     #endregion
-

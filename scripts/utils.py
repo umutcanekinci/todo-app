@@ -50,9 +50,9 @@ def GetTaskRect() -> Rect:
 
     return Rect(0, 0, GROUP_WIDTH - PADDING * 2, MIN_TASK_HEIGHT)
 
-def GetNextTaskPosition(status, group, i: int) -> tuple[int]:
+def GetNextTaskPosition(group, i: int) -> tuple[int]:
 
-    if not status or i == None:
+    if not group or i == None:
         return None
 
     return PADDING, group.tasks[i - 1].rect.bottom + PADDING if i else PADDING
