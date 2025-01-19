@@ -22,7 +22,7 @@ class GUI(Tk):
         super().__init__()
 
         self.windows       = [None for _ in TITLES] # List of windows: infoWindow, detailWindow, addWindow, editWindow
-        self.groups        = [None for _ in Status] # Group Canvases
+        self.groups        = [None for _ in GROUPS] # Group Canvases
         self.themeElements = [[]   for _ in THEMES[THEME]] # items in each list will have same color
         
         self.rect = WINDOW_RECTS["main"]
@@ -36,6 +36,12 @@ class GUI(Tk):
         self.CreateWidgets()
         self.LoadTasks()
         self.ChangeTheme(THEME)
+        self.UpdateGroups()
+
+    def UpdateGroups(self):
+
+        for group in self.groups:
+            group.UpdatePosition()
 
     @staticmethod
     def SetWindowSettings(window: Toplevel | Misc, rect: Rect, title: str, color: str, topWindow: Misc | Toplevel = None) -> None:
@@ -164,7 +170,7 @@ class GUI(Tk):
 
     def CreateTableIfNotExists(self) -> None:
 
-        self.database.Execute("CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY, status TEXT, title TEXT, detail TEXT, color TEXT, deadLine TEXT)")
+        self.database.Execute("CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY, status INTEGER, title TEXT, detail TEXT, color TEXT, deadLine TEXT)")
 
     def LoadTasks(self) -> None:
 
@@ -175,9 +181,9 @@ class GUI(Tk):
             return
 
         for row in rows:
+
             status, title, detail, color, deadLine = row[1:]
-            self.AddNewTask(self.GetGroup(Status[status]), title, detail, color, deadLine)
-        self.UpdateGroupsPosition()
+            self.AddNewTask(self.GetGroup(list(Status)[status]), title, detail, color, deadLine)
 
     def SaveTasks(self) -> None:
         
@@ -185,7 +191,7 @@ class GUI(Tk):
 
         for group in self.groups:
             for task in group.tasks:
-                self.database.Execute("INSERT INTO tasks (status, title, detail, color, deadLine) VALUES (?, ?, ?, ?, ?)", task.status.name, task.title, task.detail, task.color, task.deadLine)
+                self.database.Execute("INSERT INTO tasks (status, title, detail, color, deadLine) VALUES (?, ?, ?, ?, ?)", task.group.name.value, task.title, task.detail, task.color, task.deadLine)
 
     #endregion
 
@@ -248,7 +254,7 @@ class GUI(Tk):
         canvas.create_text((PADDING, PADDING * 12 + TITLEBAR_HEIGHT), self.selectedTask.detail, TEXT_COLOR, TEXT_FONT, 'w')
         
         canvas.create_text((PADDING, PADDING * 22 + TITLEBAR_HEIGHT), "STATUS", TEXT_COLOR, BOLD_FONT, 'w')
-        canvas.create_text((PADDING, PADDING * 25 + TITLEBAR_HEIGHT), self.selectedTask.status.name.replace('_', ' ').title(), TEXT_COLOR, TEXT_FONT, 'w')
+        canvas.create_text((PADDING, PADDING * 25 + TITLEBAR_HEIGHT), self.selectedTask.group.name.name.replace('_', ' ').title(), TEXT_COLOR, TEXT_FONT, 'w')
 
         canvas.create_text((PADDING, PADDING * 30 + TITLEBAR_HEIGHT), "DEADLINE", TEXT_COLOR, BOLD_FONT, 'w')
         canvas.create_text((PADDING, PADDING * 33 + TITLEBAR_HEIGHT), self.selectedTask.deadLine, TEXT_COLOR, TEXT_FONT, 'w')
@@ -269,9 +275,9 @@ class GUI(Tk):
             if not title:
                 return
             
-            status = Status[self.statusVar.get().upper().replace(' ', '_')]
-            self.AddNewTask(self.GetGroup(status), title, self.detailText.get("1.0", "end-1c"), self.colorchooserValue if self.colorchooserValue else self.GetColor(0), self.deadLineEntry.get())
-            self.UpdateGroupsPosition()
+            group = self.GetGroup(Status[self.statusVar.get().upper().replace(' ', '_')])
+            self.AddNewTask(group, title, self.detailText.get("1.0", "end-1c"), self.colorchooserValue if self.colorchooserValue else self.GetColor(0), self.deadLineEntry.get())
+            group.UpdatePosition()
 
         window = self.OpenWindow(2, WINDOW_RECTS["add"], TITLES[3], TITLEBAR_HEIGHT, TEXT_COLOR, TITLE_FONT, self)
         
@@ -320,9 +326,9 @@ class GUI(Tk):
             if not title:
                 return
             
-            status = Status[self.statusVar.get().upper().replace(' ', '_')]
-            self.UpdateTask(self.selectedTask, title, self.detailText.get("1.0", "end-1c"), self.colorchooserValue if self.colorchooserValue else self.GetColor(0), self.deadLineEntry.get(), status)
-            self.UpdateGroupsPosition()
+            group = self.GetGroup(Status[self.statusVar.get().upper().replace(' ', '_')])
+    
+            self.UpdateTask(self.selectedTask, title, self.detailText.get("1.0", "end-1c"), self.colorchooserValue if self.colorchooserValue else self.GetColor(0), self.deadLineEntry.get(), group)
             self.CloseWindow(self.windows[2], self)
 
         window = self.OpenWindow(2, WINDOW_RECTS["edit"], TITLES[4], TITLEBAR_HEIGHT, TEXT_COLOR, TITLE_FONT, self)
@@ -347,7 +353,7 @@ class GUI(Tk):
         self.detailText.pack(pady=(PADDING * 6, 0), padx=PADDING, side=TOP)
         self.detailText.insert("1.0", self.selectedTask.detail)
 
-        self.statusVar = StringVar(window, TASK_GROUPS[self.selectedTask.status.value].capitalize())
+        self.statusVar = StringVar(window, GROUPS[self.selectedTask.group.name.value].capitalize())
         canvas.create_text((PADDING, TITLEBAR_HEIGHT + PADDING * 24), "Select the status:", TEXT_COLOR, FONT, 'w')
         statusOption = OptionMenu(window, self.statusVar, "Open", "In Progress", "Done")
         statusOption.pack(anchor='nw', pady=PADDING * 3, padx=(PADDING * 22, 0), side=TOP)
@@ -434,38 +440,22 @@ class GUI(Tk):
     
     def CreateGroup(self, status: Status):
 
-        def SetBindings() -> None:
-
-            #canvas.bind('<B1-Motion>' , self.MoveTask)
-            canvas.bind('<Button-1>'  , lambda e: self.SelectTask(e, group))
-            canvas.bind('<MouseWheel>', lambda e: self.MousewheelScroll(e, canvas, group))
-            canvas.bind('<Configure>' , lambda e: group.Resize())
-
         group = Group(self.mainCanvas, status)
         canvas = group.canvas
         group.CreateAddButton(self.OpenAddWindow, self.addImage)
-        
+
         self.groups[status.value] = group
         self.themeElements[1].append(canvas)
-        
-        SetBindings()
-        
-    def MousewheelScroll(self, e, canvas, group: Group):
-        
-        canMoveDown = e.delta > 0 and canvas.canvasy(0) > 0
-        canMoveUp = e.delta < 0 and 0 < group.addButton.rect.bottom + PADDING - canvas.winfo_height()
-        if not (canMoveDown or canMoveUp):
-            return
-        
-        canvas.yview_scroll(-1 * int(e.delta/120), "units") if group.scrollBar else None
-
+        #canvas.bind('<B1-Motion>' , self.MoveTask)
+        canvas.bind('<Button-1>'  , lambda e: self.SelectTask(e, group))
+    
     def SetKeyBindings(self):
 
         self.bind('<Right>', lambda e: self.MoveHorizontally(Direction.RIGHT))
         self.bind('<Left>', lambda e: self.MoveHorizontally(Direction.LEFT))
         self.bind('<Down>', lambda e: self.MoveVertically(Direction.DOWN))
         self.bind('<Up>', lambda e: self.MoveVertically(Direction.UP))
-        self.bind('<Delete>', lambda e: self.RemoveTask(self.selectedTask))
+        self.bind('<Delete>', lambda e: self.selectedTask.group.DeleteTask(self.selectedTask))
         self.mainCanvas.bind_all('<Double-Button-1>', self.OpenDetailWindow)
         self.bind('<ButtonRelease-1>', self.LocateTask)
 
@@ -510,14 +500,14 @@ class GUI(Tk):
     def AddNewTask(self, group: str, title: str, detail: str, color: str, deadLine: str):
 
         if group is None:
-            raise ValueError("Status is None")
+            raise ValueError("Group is None")
 
         if not title or not color or not deadLine:
             return
 
-        group.tasks.append(Task(group, GetTaskRect(), color, group.name, title, detail, deadLine))
+        group.AddTask(Task(group, GetTaskRect(), color, title, detail, deadLine))
         
-    def UpdateTask(self, task: Task, title: str, detail: str, color: str, deadLine: str, status: Status = None):
+    def UpdateTask(self, task: Task, title: str, detail: str, color: str, deadLine: str, group: Group = None):
 
         if task is None:
             raise ValueError("Task is None")
@@ -529,24 +519,7 @@ class GUI(Tk):
 
         task.UpdateTitle(title)
         task.UpdateColor(color)
-        self.SetTaskGroup(task, status)
-
-    def RemoveTask(self, task: Task):
-        
-        if task is None:
-            raise ValueError("Task is None")
-
-        self.RemoveTaskFromList(task)
-        task.Delete()
-        self.selectedTask = None
-
-    def RemoveTaskFromList(self, task: Task):
-        
-        if task is None:
-            return
-        
-        self.GetGroup(task.status).tasks.remove(task)
-        self.UpdateGroupsPosition()
+        self.SetTaskGroup(task, group)
 
     def GetCollidedTask(self, group, x: int, y: int):
         
@@ -554,7 +527,7 @@ class GUI(Tk):
         #ref: https://stackoverflow.com/questions/38982313/python-tkinter-identify-object-on-click
         
         if group is None:
-            raise ValueError("Status is None")
+            raise ValueError("Group is None")
         
         if x is None or y is None:
             raise ValueError("X or Y is None")
@@ -565,7 +538,7 @@ class GUI(Tk):
                 return task
         return None
     
-    def SelectTask(self, event: Event, group: Status):
+    def SelectTask(self, event: Event, group: Group):
 
         collidedTask = self.GetCollidedTask(group, event.x, event.y)
         
@@ -587,23 +560,23 @@ class GUI(Tk):
         if not self.selectedTask or not direction:
             return
         
-        canMoveRight = direction == Direction.RIGHT and self.selectedTask.status is not Status.DONE
-        canMoveLeft = direction == Direction.LEFT and self.selectedTask.status is not Status.OPEN
+        canMoveRight = direction == Direction.RIGHT and self.selectedTask.group.name is not Status.DONE
+        canMoveLeft = direction == Direction.LEFT and self.selectedTask.group.name is not Status.OPEN
 
         if not (canMoveRight or canMoveLeft):
             return
         
-        newStatus = Status(self.selectedTask.status.value + direction.value)
-        self.SetTaskGroup(self.selectedTask, newStatus)
-        self.UpdateGroupsPosition()
-        self.groups[newStatus.value].canvas.yview_moveto(1)
+        newGroup = self.GetGroup(Status(self.selectedTask.group.name.value + direction.value))
+        self.SetTaskGroup(self.selectedTask, newGroup)
+        #newGroup.canvas.yview_moveto(1)
+        newGroup.UpdatePosition()
 
     def MoveVertically(self, direction : Direction):
 
         if not self.selectedTask or not direction:
             return
 
-        tasks = self.GetGroup(self.selectedTask.status).tasks
+        tasks = self.selectedTask.group.tasks
         index = tasks.index(self.selectedTask)
 
         canMoveDown = direction == Direction.DOWN and index != len(tasks) - 1
@@ -613,14 +586,15 @@ class GUI(Tk):
             return
         
         tasks[index], tasks[index + direction.value] = tasks[index + direction.value], tasks[index]
-        self.UpdateGroupsPosition()
-        #self.groups[self.selectedTask.status.value].yview_scroll(direction.value, "units")
+        self.selectedTask.group.UpdatePosition()
+        #selectedTask.group.canvas.yview_scroll(direction.value, "units")
 
-    def SetTaskGroup(self, task: Task, newStatus: Status):
+    def SetTaskGroup(self, task: Task, newGroup: Group):
 
-        self.AddNewTask(self.GetGroup(newStatus), task.title, task.detail, task.color, task.deadLine)
-        self.RemoveTask(task)
-        self.selectedTask = self.GetGroup(newStatus).tasks[-1]
+        self.AddNewTask(newGroup, task.title, task.detail, task.color, task.deadLine)
+        task.group.DeleteTask(task)
+        task.group.UpdatePosition()
+        self.selectedTask = newGroup.tasks[-1]
         self.selectedTask.Select(self.GetColor(3))
 
     def LocateTask(self, event: Event):
@@ -636,23 +610,21 @@ class GUI(Tk):
 
         # Get nearest group and locate the task in that group
         for group in self.groups:
-            if isPointInRectangle(GetGroupRect(group.name), event.x, event.y):
+            if isPointInRectangle(group.rect, event.x, event.y):
                 
-            
-                self.RemoveTaskFromList(self.selectedTask)
-                self.selectedTask.status = group.name
+                group.DeleteTask(self.selectedTask)
+                self.selectedTask.group = group.name
                 
                 for task in group:
                     if isPointInRectangle(task.rect, event.x, event.y):
                         group.insert(group.index(task), self.selectedTask)
                         break
                 else:
-                    group.append(self.selectedTask)
+                    group.AddTask(self.selectedTask)
                 
-                self.UpdateGroupsPosition()
                 break
         else:
-            self.UpdateGroupsPosition()
+            self.selectedTask.group.UpdatePosition()
 
     def MoveTask(self, event):
 
@@ -674,11 +646,5 @@ class GUI(Tk):
         self.mainCanvas.startPos = Rect(event.x, event.y)
 
     #region Update Position Methods
-
-    def UpdateGroupsPosition(self):
-
-        for group in self.groups:
-            
-            group.UpdatePosition()
 
     #endregion

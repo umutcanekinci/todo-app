@@ -5,12 +5,12 @@ from group import Group
 
 class Task:
     
-    def __init__(self, group: Group, rect: Rect, color: str, status: int, title, detail, deadLine):
+    def __init__(self, group: Group, rect: Rect, color: str, title, detail, deadLine):
         
         self.rect = rect
         self.color = color
         self.title, self.detail = title, detail
-        self.status = status
+        self.group = group
         self.canvas = group.canvas
         self.deadLine = deadLine
         self.id =  self.canvas.create_rectangle(rect, color)

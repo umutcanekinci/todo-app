@@ -2,7 +2,6 @@ from PIL import Image, ImageTk
 from rect import Rect
 from datetime import datetime
 from rects import *
-from enums import Status
 
 def GetImage(file: str, rect: Rect):
 
@@ -34,13 +33,13 @@ def isPointInRectangle(rect: Rect, x: int, y: int):
 
 #region GetRects
 
-def GetTitleBoxRect(status: Status) -> Rect:
+def GetTitleBoxRect(group) -> Rect:
 
-    return Rect(PADDING + (GROUP_WIDTH + PADDING) * status.value, PADDING, GROUP_WIDTH, TITLE_BOX_HEIGHT)
+    return Rect(PADDING + (GROUP_WIDTH + PADDING) * group.name.value, PADDING, GROUP_WIDTH, TITLE_BOX_HEIGHT)
 
-def GetGroupRect(status: Status) -> Rect:
+def GetGroupRect(group) -> Rect:
 
-    return Rect(PADDING + (GROUP_WIDTH + PADDING) * status.value,TITLE_BOX_HEIGHT + PADDING * 2, GROUP_WIDTH, GetMainCanvasRect(MAIN_TITLEBAR_HEIGHT, WINDOW_RECTS["main"]).height - PADDING * 2 - TITLE_BOX_HEIGHT)
+    return Rect(PADDING + (GROUP_WIDTH + PADDING) * group.name.value,TITLE_BOX_HEIGHT + PADDING * 2, GROUP_WIDTH, GetMainCanvasRect(MAIN_TITLEBAR_HEIGHT, WINDOW_RECTS["main"]).height - PADDING * 2 - TITLE_BOX_HEIGHT)
 
 def GetMainCanvasRect(titleBarHeight: int, windowRect: Rect) -> Rect:
 

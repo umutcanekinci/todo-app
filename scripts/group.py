@@ -1,7 +1,7 @@
 from widgets.canvas import CustomCanvas
 from widgets.button import CustomButton
 from utils import GetTitleBoxRect, GetGroupRect, GetNextTaskPosition, GetTaskRect
-from constants import TEXTBOX_COLORS, TEXT_COLOR, BOLD_FONT, TASK_GROUPS, PADDING
+from constants import TEXTBOX_COLORS, TEXT_COLOR, BOLD_FONT, GROUPS, PADDING
 from rects import ADD_BUTTON_RECT
 from enums import Status
 from tkinter.ttk import Scrollbar
@@ -23,22 +23,41 @@ class Group:
         self.CreateCanvas()
         self.CreateTitleBox()
     
+    #region Create Methods
+
     def CreateCanvas(self) -> None:
         
-        self.rect = GetGroupRect(self.name)
+        self.rect = GetGroupRect(self)
         self.canvas = CustomCanvas(self.mainCanvas, None, self.rect)
+        self.canvas.bind('<Configure>' , lambda e: self.Resize())
+        self.canvas.bind('<MouseWheel>', self.MousewheelScroll)
 
     def CreateTitleBox(self) -> None:
 
-        self.mainCanvas.create_rectangle(GetTitleBoxRect(self.name), TEXTBOX_COLORS[self.name.value])
-        self.mainCanvas.create_text(GetTitleBoxRect(self.name).center, TASK_GROUPS[self.name.value], TEXT_COLOR, BOLD_FONT)
+        self.mainCanvas.create_rectangle(GetTitleBoxRect(self), TEXTBOX_COLORS[self.name.value])
+        self.mainCanvas.create_text(GetTitleBoxRect(self).center, GROUPS[self.name.value], TEXT_COLOR, BOLD_FONT)
             
     def CreateAddButton(self, onClick, image) -> None:
         
         self.addButton = CustomButton(self.canvas, ADD_BUTTON_RECT, onClick, None, image)
 
+    #endregion
+
+    #region Update Methods
+
+    def Resize(self):
+        
+        region = self.canvas.bbox("all")
+        
+        if not region:
+            return
+        
+        region = 0, 0, region[2], region[3] + ADD_BUTTON_RECT.height + PADDING * 6 
+        self.canvas.configure(scrollregion=region)
+
     def UpdatePosition(self) -> None:
 
+        print(self.name.name, self.canvas.bbox("all"))
         self.UpdateTasksPosition()
         self.UpdateAddButtonPosition()
         
@@ -50,16 +69,6 @@ class Group:
             return
         
         self.DeleteScrollBar()
-
-    def Resize(self):
-        
-        region = self.canvas.bbox("all")
-        
-        if not region:
-            return
-        
-        region = 0, 0, region[2], region[3] + ADD_BUTTON_RECT.height + PADDING * 6 
-        self.canvas.configure(scrollregion=region)
 
     def UpdateTasksPosition(self):
         
@@ -79,6 +88,10 @@ class Group:
 
         rect = Rect(x, y, *GetTaskRect().size)
         addButton.place(rect.center)
+
+    #endregion
+
+    #region Scroll Methods
 
     def CreateScrollBar(self):
         
@@ -100,6 +113,16 @@ class Group:
         self.scrollBar.set(x0, x1)
         self.UpdateAddButtonPosition()
 
+    def MousewheelScroll(self, e):
+        
+        canMoveDown = e.delta > 0 and self.canvas.canvasy(0) > 0
+        canMoveUp = e.delta < 0 and 0 < self.addButton.rect.bottom + PADDING - self.canvas.winfo_height()
+        
+        if not (canMoveDown or canMoveUp):
+            return
+        
+        self.canvas.yview_scroll(-1 * int(e.delta/120), "units") if self.scrollBar else None
+
     def DeleteScrollBar(self) -> None:
 
         if not self.scrollBar:
@@ -107,3 +130,22 @@ class Group:
 
         self.scrollBar.place_forget()
         self.scrollBar = None
+
+    #endregion
+
+    #region Task Methods
+
+    def AddTask(self, task):
+        
+        self.tasks.append(task)
+
+    def RemoveTask(self, task):
+        
+        self.tasks.remove(task)
+
+    def DeleteTask(self, task):
+        
+        task.Delete()
+        self.RemoveTask(task)
+
+    #endregion
