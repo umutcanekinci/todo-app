@@ -55,6 +55,6 @@ def GetNextTaskPosition(status, group, i: int) -> tuple[int]:
     if not status or i == None:
         return None
 
-    return PADDING, group[i - 1].rect.bottom + PADDING if i else PADDING
+    return PADDING, group.tasks[i - 1].rect.bottom + PADDING if i else PADDING
 
 #endregion
